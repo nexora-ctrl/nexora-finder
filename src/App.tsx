@@ -177,6 +177,8 @@ export function App() {
   const handleOpenItem = async (item: FileItem) => {
     try {
       await invoke("open_item", { path: item.path });
+      // Auto minimize / hide window after opening file or app
+      invoke("hide_window").catch((err) => console.error(err));
     } catch (err) {
       console.error("Failed to open item:", err);
     }
@@ -185,6 +187,8 @@ export function App() {
   const handleRevealItem = async (item: FileItem) => {
     try {
       await invoke("reveal_item", { path: item.path });
+      // Auto minimize / hide window after revealing in Explorer
+      invoke("hide_window").catch((err) => console.error(err));
     } catch (err) {
       console.error("Failed to reveal item:", err);
     }
