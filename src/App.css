@@ -889,12 +889,11 @@ html, body, #root {
   max-height: unset !important;
   border-radius: 16px;
   overflow: hidden !important;
-  box-shadow: 
-    0 16px 36px rgba(0, 0, 0, 0.45),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.22) !important;
 }
 
 .spotlight-window.compact .spotlight-header {
+  border: none !important;
   border-bottom: none !important;
   background: transparent !important;
   height: 100% !important;
@@ -903,6 +902,8 @@ html, body, #root {
 
 .spotlight-window.compact .search-bar-wrapper {
   height: 100% !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 /* ==========================================================================
@@ -1076,12 +1077,18 @@ html, body, #root {
   background: linear-gradient(135deg, #f4f8fe 0%, #e8f2fe 45%, #dbeafe 100%) !important;
   backdrop-filter: blur(50px) saturate(180%) contrast(100%) !important;
   -webkit-backdrop-filter: blur(50px) saturate(180%) contrast(100%) !important;
-  border: 1px solid rgba(147, 197, 253, 0.7) !important;
+  border: 1px solid rgba(147, 197, 253, 0.8) !important;
   box-shadow: 
-    0 24px 60px rgba(30, 64, 175, 0.18),
-    0 8px 20px rgba(15, 23, 42, 0.06),
-    inset 0 1px 2px 0 rgba(255, 255, 255, 0.95) !important;
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6) !important;
   color: #0f172a !important;
+}
+
+.spotlight-window.theme-light.compact {
+  border: 1px solid rgba(147, 197, 253, 0.85) !important;
+  box-shadow: 
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6) !important;
 }
 
 /* Header & Search Bar */
@@ -1091,6 +1098,7 @@ html, body, #root {
 }
 
 .spotlight-window.theme-light.compact .spotlight-header {
+  border: none !important;
   border-bottom: none !important;
   background: transparent !important;
 }
