@@ -75,7 +75,7 @@ export function App() {
           });
         }
       } else if (manual) {
-        alert("Nexora Finder sudah menggunakan versi terbaru (v0.2.0-beta)!\nTidak ada pembaruan baru yang ditemukan.");
+        alert("Nexora Finder sudah menggunakan versi terbaru (v0.3.0-beta)!\nTidak ada pembaruan baru yang ditemukan.");
       }
     } catch (err: any) {
       console.info("Update check info:", err);

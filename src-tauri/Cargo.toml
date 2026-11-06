@@ -1,6 +1,6 @@
 [package]
 name = "nexora-finder"
-version = "0.2.0"
+version = "0.3.0"
 description = "Nexora Finder - Instant File Finder for Windows"
 authors = ["Nexora Team"]
 edition = "2021"
