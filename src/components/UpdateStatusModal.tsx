@@ -15,17 +15,14 @@ export const UpdateStatusModal: React.FC<UpdateStatusModalProps> = ({ notice, on
   if (!notice) return null;
 
   return (
-    <div className="settings-overlay" onClick={onClose}>
+    <div className="settings-overlay update-status-overlay" onClick={onClose} style={{ zIndex: 100 }}>
       <div
-        className="settings-modal"
+        className="settings-modal update-status-dialog"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: 380,
           padding: "20px 24px",
-          background: "var(--bg-secondary)",
           borderRadius: 16,
-          boxShadow: "0 20px 50px rgba(0,0,0,0.45)",
-          border: "1px solid var(--border-color)",
         }}
       >
         <div>

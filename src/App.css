@@ -622,14 +622,35 @@ html, body, #root {
 .settings-modal {
   width: 90%;
   max-width: 540px;
-  background: rgba(18, 24, 34, 0.95);
+  background: #111827;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(255, 255, 255, 0.08) inset;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.9), 0 0 1px 1px rgba(255, 255, 255, 0.08) inset;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   animation: scaleIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.update-status-overlay,
+.update-modal-overlay {
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.update-status-dialog,
+.update-modal {
+  background: #0f172a !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 30px rgba(37, 99, 235, 0.15) !important;
+}
+
+.spotlight-window.theme-light .update-status-dialog,
+.spotlight-window.theme-light .update-modal {
+  background: #ffffff !important;
+  border: 1px solid rgba(147, 197, 253, 0.8) !important;
+  box-shadow: 0 20px 45px rgba(30, 64, 175, 0.18) !important;
 }
 
 @keyframes fadeIn {

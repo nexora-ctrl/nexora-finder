@@ -21,17 +21,14 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="settings-overlay" onClick={onClose}>
+    <div className="settings-overlay update-modal-overlay" onClick={onClose} style={{ zIndex: 100 }}>
       <div
         className="settings-modal update-modal"
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: 460,
           padding: "22px 26px",
-          background: "var(--bg-secondary)",
           borderRadius: 18,
-          boxShadow: "0 24px 60px rgba(0,0,0,0.5)",
-          border: "1px solid var(--border-color)",
         }}
       >
         <div className="settings-header" style={{ marginBottom: 18, paddingBottom: 14 }}>

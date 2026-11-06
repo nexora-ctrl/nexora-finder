@@ -137,6 +137,9 @@ pub fn run() {
 
             let _ = tray_builder.build(app)?;
 
+            // Register Explorer right-click context menu "Open with N-Finder"
+            register_explorer_context_menu();
+
             // If indexing never completed or index is empty, initiate background indexing
             let completed = db.get_metadata("indexing_completed").unwrap_or(None);
             let count = db.get_total_count().unwrap_or(0);
@@ -200,3 +203,33 @@ fn toggle_window(window: &tauri::WebviewWindow) {
         let _ = window.emit("window-shown", ());
     }
 }
+
+fn register_explorer_context_menu() {
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(exe_path) = std::env::current_exe() {
+            let exe_str = exe_path.to_string_lossy().to_string();
+            let icon_str = format!("{},0", exe_str);
+            let command_str = format!("\"{}\" \"%1\"", exe_str);
+            let bg_command_str = format!("\"{}\"", exe_str);
+
+            let targets = [
+                ("Software\\Classes\\Directory\\shell\\NexoraFinder", &command_str),
+                ("Software\\Classes\\Directory\\Background\\shell\\NexoraFinder", &bg_command_str),
+                ("Software\\Classes\\Drive\\shell\\NexoraFinder", &command_str),
+            ];
+
+            for (sub_key, cmd) in targets {
+                if let Ok(key) = windows_registry::CURRENT_USER.create(sub_key) {
+                    let _ = key.set_string("", "Open with N-Finder");
+                    let _ = key.set_string("Icon", &icon_str);
+                }
+                let cmd_key_path = format!("{}\\command", sub_key);
+                if let Ok(cmd_key) = windows_registry::CURRENT_USER.create(&cmd_key_path) {
+                    let _ = cmd_key.set_string("", cmd);
+                }
+            }
+        }
+    }
+}
+
