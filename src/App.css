@@ -1028,3 +1028,306 @@ html, body, #root {
   font-size: 10.5px;
   color: var(--text-muted);
 }
+
+/* ==========================================================================
+   Theme Mode Toggle Controls (Settings)
+   ========================================================================== */
+.theme-toggle-options {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.theme-pill {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.theme-pill:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text-primary);
+}
+
+.theme-pill.active {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.5);
+  color: #38bdf8;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+}
+
+/* ==========================================================================
+   Light Mode (Apple Liquid Glass Bright Spotlight Theme)
+   ========================================================================== */
+.spotlight-window.theme-light {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(246, 248, 252, 0.90) 100%) !important;
+  backdrop-filter: blur(60px) saturate(190%) contrast(100%) !important;
+  -webkit-backdrop-filter: blur(60px) saturate(190%) contrast(100%) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 
+    0 24px 54px rgba(0, 0, 0, 0.18),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 16px 0 rgba(0, 0, 0, 0.01) !important;
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .spotlight-header {
+  background: rgba(255, 255, 255, 0.75) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.spotlight-window.theme-light.compact .spotlight-header {
+  border-bottom: none !important;
+  background: transparent !important;
+}
+
+.spotlight-window.theme-light .search-input {
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .search-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+.spotlight-window.theme-light .search-icon {
+  color: #0284c7 !important;
+}
+
+.spotlight-window.theme-light .search-stats-badge {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .settings-btn {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .settings-btn:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .category-pill {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .category-pill:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .category-pill.active {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(2, 132, 199, 0.3) !important;
+}
+
+.spotlight-window.theme-light .drive-pill {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .drive-pill.active {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.spotlight-window.theme-light .result-item:hover {
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.spotlight-window.theme-light .result-item.selected {
+  background: rgba(2, 132, 199, 0.12) !important;
+  border-left-color: #0284c7 !important;
+}
+
+.spotlight-window.theme-light .result-name {
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .result-path {
+  color: #64748b !important;
+}
+
+.spotlight-window.theme-light .result-meta {
+  color: #64748b !important;
+}
+
+.spotlight-window.theme-light .result-icon-box {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+.spotlight-window.theme-light .preview-pane {
+  background: rgba(246, 248, 252, 0.9) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.spotlight-window.theme-light .preview-title {
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .preview-path {
+  color: #64748b !important;
+}
+
+.spotlight-window.theme-light .preview-btn {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.09) !important;
+  color: #334155 !important;
+}
+
+.spotlight-window.theme-light .preview-btn:hover {
+  background: rgba(0, 0, 0, 0.09) !important;
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .preview-btn.primary {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+.spotlight-window.theme-light .status-bar {
+  background: rgba(241, 245, 249, 0.95) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #64748b !important;
+}
+
+.spotlight-window.theme-light .reindex-btn {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .reindex-btn:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+  color: #0f172a !important;
+}
+
+/* Light Theme for Settings Modal */
+.spotlight-window.theme-light .settings-overlay {
+  background: rgba(15, 23, 42, 0.35) !important;
+}
+
+.spotlight-window.theme-light .settings-modal {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22) !important;
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .settings-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.spotlight-window.theme-light .settings-title {
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .settings-close-btn {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .settings-close-btn:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .setting-card,
+.spotlight-window.theme-light .setting-card-section,
+.spotlight-window.theme-light .setting-card-info {
+  background: rgba(0, 0, 0, 0.035) !important;
+  border-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+.spotlight-window.theme-light .setting-card:hover {
+  background: rgba(0, 0, 0, 0.055) !important;
+}
+
+.spotlight-window.theme-light .setting-label {
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .setting-desc {
+  color: #64748b !important;
+}
+
+.spotlight-window.theme-light .theme-pill {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .theme-pill.active {
+  background: rgba(2, 132, 199, 0.14) !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+}
+
+.spotlight-window.theme-light .scope-pill {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .scope-pill.active {
+  background: rgba(2, 132, 199, 0.14) !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+}
+
+.spotlight-window.theme-light .custom-drives-list {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.spotlight-window.theme-light .custom-drive-letter {
+  color: #0f172a !important;
+}
+
+.spotlight-window.theme-light .custom-drive-label {
+  color: #64748b !important;
+}
+
+.spotlight-window.theme-light .custom-drive-size {
+  color: #94a3b8 !important;
+}
+
+.spotlight-window.theme-light .drive-check-box {
+  border-color: rgba(0, 0, 0, 0.25) !important;
+}
+
+.spotlight-window.theme-light .drive-check-box.checked {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+  color: #fff !important;
+}
+
+.spotlight-window.theme-light .settings-footer {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
+  color: #64748b !important;
+}

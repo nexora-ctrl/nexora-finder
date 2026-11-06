@@ -143,8 +143,13 @@ fn position_spotlight(window: &tauri::WebviewWindow) {
         let mon_size = monitor.size();
         let mon_w = mon_size.width as f64 / scale;
         let mon_h = mon_size.height as f64 / scale;
+        let cur_h = if let Ok(sz) = window.inner_size() {
+            sz.to_logical::<f64>(scale).height
+        } else {
+            58.0
+        };
         let x = (mon_pos.x as f64 / scale) + (mon_w - 800.0) / 2.0;
-        let y = (mon_pos.y as f64 / scale) + (mon_h * 0.22);
+        let y = (mon_pos.y as f64 / scale) + (mon_h - cur_h) / 2.0;
         let _ = window.set_position(tauri::LogicalPosition::new(x, y));
     } else {
         let _ = window.center();

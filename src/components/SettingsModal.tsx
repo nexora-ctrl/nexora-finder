@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive } from "lucide-react";
+import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive, Sun, Moon } from "lucide-react";
 import { isEnabled, enable, disable } from "@tauri-apps/plugin-autostart";
 import { invoke } from "@tauri-apps/api/core";
 import { DriveInfo } from "../types";
@@ -12,6 +12,8 @@ interface SettingsModalProps {
   totalIndexed: number;
   isIndexing: boolean;
   availableDrives: DriveInfo[];
+  theme: "dark" | "light";
+  onThemeChange: (theme: "dark" | "light") => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -21,6 +23,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   totalIndexed,
   isIndexing,
   availableDrives,
+  theme,
+  onThemeChange,
 }) => {
   const [autostart, setAutostart] = useState(false);
   const [minimizeToTray, setMinimizeToTray] = useState(true);
@@ -154,6 +158,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="settings-body">
+          {/* Setting 0: Theme Mode */}
+          <div className="setting-card-section">
+            <div className="setting-card-header">
+              <div className="setting-icon-box">
+                {theme === "light" ? (
+                  <Sun size={18} className="text-amber-400" />
+                ) : (
+                  <Moon size={18} className="text-cyan-400" />
+                )}
+              </div>
+              <div className="setting-text">
+                <span className="setting-label">Tema Tampilan</span>
+                <p className="setting-desc">
+                  Pilih nuansa antarmuka antara Mode Gelap (Dark Liquid Glass) atau Mode Terang (Light Liquid Glass).
+                </p>
+              </div>
+            </div>
+
+            <div className="theme-toggle-options">
+              <button
+                type="button"
+                className={`theme-pill ${theme === "dark" ? "active" : ""}`}
+                onClick={() => {
+                  onThemeChange("dark");
+                  showSavedToast();
+                }}
+              >
+                <Moon size={13} />
+                <span>Mode Gelap</span>
+              </button>
+              <button
+                type="button"
+                className={`theme-pill ${theme === "light" ? "active" : ""}`}
+                onClick={() => {
+                  onThemeChange("light");
+                  showSavedToast();
+                }}
+              >
+                <Sun size={13} />
+                <span>Mode Terang</span>
+              </button>
+            </div>
+          </div>
+
           {/* Setting: Drive Scanning Scope */}
           <div className="setting-card-section">
             <div className="setting-card-header">

@@ -28,10 +28,20 @@ export function App() {
   const [drives, setDrives] = useState<DriveInfo[]>([]);
   const [indexingStatus, setIndexingStatus] = useState<IndexingStatus | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    const saved = localStorage.getItem("nexora_theme");
+    return saved === "light" ? "light" : "dark";
+  });
 
   const isCompact = query.trim().length === 0 && !isSettingsOpen;
 
   const debounceTimer = useRef<number | null>(null);
+  const searchRequestId = useRef(0);
+
+  const handleThemeChange = (newTheme: "dark" | "light") => {
+    setTheme(newTheme);
+    localStorage.setItem("nexora_theme", newTheme);
+  };
 
   // Sync compact window mode with Tauri backend
   useEffect(() => {
@@ -94,10 +104,13 @@ export function App() {
   // Search function
   const performSearch = useCallback(
     async (searchTerm: string, cat: CategoryType, drv: string) => {
+      const thisId = ++searchRequestId.current;
+
       if (searchTerm.trim().length === 0) {
         // When query is empty, show recent files
         try {
           const recent = await invoke<FileItem[]>("get_recent_files", { limit: 25 });
+          if (thisId !== searchRequestId.current) return;
           setResults(recent);
           setTotalMatched(recent.length);
           setElapsedMs(0.5);
@@ -123,22 +136,28 @@ export function App() {
           },
         });
 
+        if (thisId !== searchRequestId.current) return;
+
         setResults(res.items);
         setTotalMatched(res.total_matched);
         setElapsedMs(res.elapsed_ms);
         setSelectedIndex(0);
       } catch (err) {
-        console.error("Search failed:", err);
-        setResults([]);
-        setTotalMatched(0);
+        if (thisId === searchRequestId.current) {
+          console.error("Search failed:", err);
+          setResults([]);
+          setTotalMatched(0);
+        }
       } finally {
-        setIsLoading(false);
+        if (thisId === searchRequestId.current) {
+          setIsLoading(false);
+        }
       }
     },
     [],
   );
 
-  // Debounced search trigger when query or filters change
+  // Debounced search trigger: 5ms for instant responsiveness
   useEffect(() => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
@@ -146,7 +165,7 @@ export function App() {
 
     debounceTimer.current = window.setTimeout(() => {
       performSearch(query, activeCategory, activeDrive);
-    }, 25);
+    }, 5);
 
     return () => {
       if (debounceTimer.current) {
@@ -219,7 +238,7 @@ export function App() {
   const selectedItem = results[selectedIndex] ?? null;
 
   return (
-    <div className={`spotlight-window ${isCompact ? "compact" : ""}`}>
+    <div className={`spotlight-window ${isCompact ? "compact" : ""} ${theme === "light" ? "theme-light" : ""}`}>
       <header className="spotlight-header">
         <SearchBar
           value={query}
@@ -274,6 +293,8 @@ export function App() {
         totalIndexed={indexingStatus?.total_indexed ?? 0}
         isIndexing={indexingStatus?.is_indexing ?? false}
         availableDrives={drives}
+        theme={theme}
+        onThemeChange={handleThemeChange}
       />
     </div>
   );

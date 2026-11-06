@@ -19,34 +19,12 @@ pub async fn search_files(
     state: State<'_, AppState>,
 ) -> Result<SearchResult, String> {
     let start_time = std::time::Instant::now();
-    let limit = query.limit.unwrap_or(100).min(500);
 
     let mut tantivy_res = state.search.search(&query).unwrap_or_else(|_| SearchResult {
         items: Vec::new(),
         total_matched: 0,
         elapsed_ms: 0.0,
     });
-
-    // If Tantivy returned fewer results than limit and query isn't empty, supplement with SQLite substring match
-    if tantivy_res.items.len() < limit && !query.query.trim().is_empty() {
-        if let Ok(sql_items) = state.db.search(&query) {
-            let mut seen_paths = std::collections::HashSet::new();
-            for item in &tantivy_res.items {
-                seen_paths.insert(item.path.clone());
-            }
-
-            for item in sql_items {
-                if !seen_paths.contains(&item.path) {
-                    seen_paths.insert(item.path.clone());
-                    tantivy_res.items.push(item);
-                    if tantivy_res.items.len() >= limit {
-                        break;
-                    }
-                }
-            }
-            tantivy_res.total_matched = tantivy_res.items.len();
-        }
-    }
 
     // Filter by enabled drives if user configured specific drive scope
     if let Ok(Some(s)) = state.db.get_metadata("enabled_drives") {
@@ -132,16 +110,82 @@ pub async fn check_usn_status(drive: String) -> Result<bool, String> {
 
 #[tauri::command]
 pub async fn set_window_compact(compact: bool, window: tauri::WebviewWindow) -> Result<(), String> {
-    let target_height = if compact { 56.0 } else { 580.0 };
-    if let Ok(current_size) = window.inner_size() {
-        let scale = window.scale_factor().unwrap_or(1.0);
-        let current_logical_height = current_size.to_logical::<f64>(scale).height;
-        if (current_logical_height - target_height).abs() > 2.0 {
-            let _ = window.set_size(tauri::LogicalSize::new(800.0, target_height));
-        }
+    let scale = window.scale_factor().unwrap_or(1.0);
+    let target_h = if compact { 58.0 } else { 580.0 };
+    let target_w = 800.0;
+
+    let (target_x, target_y) = if let Ok(Some(monitor)) = window.current_monitor() {
+        let mon_pos = monitor.position();
+        let mon_size = monitor.size();
+        let mon_w = mon_size.width as f64 / scale;
+        let mon_h = mon_size.height as f64 / scale;
+        let x = (mon_pos.x as f64 / scale) + (mon_w - target_w) / 2.0;
+        let y = (mon_pos.y as f64 / scale) + (mon_h - target_h) / 2.0;
+        (x, y)
     } else {
-        let _ = window.set_size(tauri::LogicalSize::new(800.0, target_height));
+        (0.0, 0.0)
+    };
+
+    let cur_outer = window.outer_position().unwrap_or_default();
+    let cur_inner = window.inner_size().unwrap_or_default();
+
+    let start_x = cur_outer.x as f64;
+    let start_y = cur_outer.y as f64;
+    let start_w = cur_inner.width as f64;
+    let start_h = cur_inner.height as f64;
+
+    let end_x = target_x * scale;
+    let end_y = target_y * scale;
+    let end_w = target_w * scale;
+    let end_h = target_h * scale;
+
+    if (start_h - end_h).abs() > 3.0 || (start_y - end_y).abs() > 3.0 {
+        let hwnd_opt: Option<isize> = {
+            #[cfg(target_os = "windows")]
+            {
+                window.hwnd().ok().map(|h| h.0 as isize)
+            }
+            #[cfg(not(target_os = "windows"))]
+            {
+                None
+            }
+        };
+
+        if let Some(hwnd_val) = hwnd_opt {
+            let steps = 8;
+            for i in 1..=steps {
+                let t = i as f64 / steps as f64;
+                // Cubic ease-out
+                let ease = 1.0 - (1.0 - t).powi(3);
+                let cur_x_val = (start_x + (end_x - start_x) * ease).round() as i32;
+                let cur_y_val = (start_y + (end_y - start_y) * ease).round() as i32;
+                let cur_w_val = (start_w + (end_w - start_w) * ease).round() as i32;
+                let cur_h_val = (start_h + (end_h - start_h) * ease).round() as i32;
+
+                #[cfg(target_os = "windows")]
+                {
+                    use windows::Win32::UI::WindowsAndMessaging::{SetWindowPos, SWP_NOACTIVATE, SWP_NOZORDER};
+                    use windows::Win32::Foundation::HWND;
+                    unsafe {
+                        let _ = SetWindowPos(
+                            HWND(hwnd_val as _),
+                            None,
+                            cur_x_val,
+                            cur_y_val,
+                            cur_w_val,
+                            cur_h_val,
+                            SWP_NOACTIVATE | SWP_NOZORDER,
+                        );
+                    }
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(12)).await;
+            }
+        }
     }
+
+    let _ = window.set_size(tauri::LogicalSize::new(target_w, target_h));
+    let _ = window.set_position(tauri::LogicalPosition::new(target_x, target_y));
+
     Ok(())
 }
 
