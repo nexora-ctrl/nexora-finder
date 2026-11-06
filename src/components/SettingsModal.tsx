@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive, Sun, Moon, Sparkles } from "lucide-react";
+import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive, Sun, Moon, Sparkles, Droplets } from "lucide-react";
 import { isEnabled, enable, disable } from "@tauri-apps/plugin-autostart";
 import { invoke } from "@tauri-apps/api/core";
 import { DriveInfo } from "../types";
@@ -14,6 +14,8 @@ interface SettingsModalProps {
   availableDrives: DriveInfo[];
   theme: "dark" | "light";
   onThemeChange: (theme: "dark" | "light") => void;
+  bgOpacity: number;
+  onBgOpacityChange: (opacity: number) => void;
   onCheckUpdate: () => void;
   isCheckingUpdate: boolean;
 }
@@ -27,6 +29,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   availableDrives,
   theme,
   onThemeChange,
+  bgOpacity,
+  onBgOpacityChange,
   onCheckUpdate,
   isCheckingUpdate,
 }) => {
@@ -203,6 +207,71 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <Sun size={13} />
                 <span>Mode Terang</span>
               </button>
+            </div>
+          </div>
+
+          {/* Setting: Background Transparency */}
+          <div className="setting-card-section">
+            <div className="setting-card-header">
+              <div className="setting-icon-box">
+                <Droplets size={18} className="text-cyan-400" />
+              </div>
+              <div className="setting-text">
+                <span className="setting-label">Transparansi Latar Belakang</span>
+                <p className="setting-desc">
+                  Sesuaikan tingkat kepekatan efek kaca buram (frosted glass) antarmuka jendela.
+                </p>
+              </div>
+            </div>
+
+            <div className="opacity-slider-container">
+              <div className="opacity-slider-header">
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Tingkat Opasitas</span>
+                <span className="opacity-value-badge">{bgOpacity}%</span>
+              </div>
+
+              <input
+                type="range"
+                min="40"
+                max="100"
+                step="2"
+                value={bgOpacity}
+                onChange={(e) => onBgOpacityChange(Number(e.target.value))}
+                className="opacity-slider-input"
+              />
+
+              <div className="opacity-preset-group">
+                <button
+                  type="button"
+                  className={`opacity-preset-btn ${bgOpacity === 55 ? "active" : ""}`}
+                  onClick={() => {
+                    onBgOpacityChange(55);
+                    showSavedToast();
+                  }}
+                >
+                  Kaca (55%)
+                </button>
+                <button
+                  type="button"
+                  className={`opacity-preset-btn ${bgOpacity === 88 ? "active" : ""}`}
+                  onClick={() => {
+                    onBgOpacityChange(88);
+                    showSavedToast();
+                  }}
+                >
+                  Seimbang (88%)
+                </button>
+                <button
+                  type="button"
+                  className={`opacity-preset-btn ${bgOpacity === 98 ? "active" : ""}`}
+                  onClick={() => {
+                    onBgOpacityChange(98);
+                    showSavedToast();
+                  }}
+                >
+                  Solid (98%)
+                </button>
+              </div>
             </div>
           </div>
 

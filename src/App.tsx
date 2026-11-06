@@ -44,6 +44,14 @@ export function App() {
     const saved = localStorage.getItem("nexora_theme");
     return saved === "light" ? "light" : "dark";
   });
+  const [bgOpacity, setBgOpacity] = useState<number>(() => {
+    const saved = localStorage.getItem("nexora_bg_opacity");
+    if (saved !== null) {
+      const parsed = Number(saved);
+      if (!isNaN(parsed) && parsed >= 40 && parsed <= 100) return parsed;
+    }
+    return 88;
+  });
   const [updateAvailable, setUpdateAvailable] = useState<{
     version: string;
     body?: string;
@@ -389,7 +397,10 @@ export function App() {
   const selectedItem = results[selectedIndex] ?? null;
 
   return (
-    <div className={`spotlight-window ${isCompact ? "compact" : ""} ${theme === "light" ? "theme-light" : ""}`}>
+    <div
+      className={`spotlight-window ${isCompact ? "compact" : ""} ${theme === "light" ? "theme-light" : ""}`}
+      style={{ "--bg-opacity": (bgOpacity / 100).toFixed(2) } as React.CSSProperties}
+    >
       <header className="spotlight-header">
         <SearchBar
           value={query}
@@ -474,6 +485,11 @@ export function App() {
         availableDrives={drives}
         theme={theme}
         onThemeChange={handleThemeChange}
+        bgOpacity={bgOpacity}
+        onBgOpacityChange={(val) => {
+          setBgOpacity(val);
+          localStorage.setItem("nexora_bg_opacity", String(val));
+        }}
         onCheckUpdate={() => checkForUpdates(true)}
         isCheckingUpdate={isCheckingUpdate}
       />

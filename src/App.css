@@ -45,6 +45,22 @@
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --font-sans: 'Sora', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --bg-opacity: 0.88;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 0.85s linear infinite !important;
+  display: inline-block;
+  transform-origin: center center;
 }
 
 * {
@@ -83,7 +99,11 @@ html, body, #root {
   flex-direction: column;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(180deg, rgba(18, 25, 40, 0.92) 0%, rgba(10, 15, 25, 0.88) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(18, 25, 40, var(--bg-opacity, 0.92)) 0%,
+    rgba(10, 15, 25, calc(var(--bg-opacity, 0.92) * 0.96)) 100%
+  );
   backdrop-filter: blur(60px) saturate(180%) contrast(105%);
   -webkit-backdrop-filter: blur(60px) saturate(180%) contrast(105%);
   border: 1px solid rgba(255, 255, 255, 0.13);
@@ -101,7 +121,7 @@ html, body, #root {
 .spotlight-header {
   display: flex;
   flex-direction: column;
-  background: rgba(22, 30, 48, 0.82);
+  background: rgba(22, 30, 48, calc(var(--bg-opacity, 0.92) * 0.90));
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
@@ -420,7 +440,7 @@ html, body, #root {
   align-items: center;
   justify-content: space-between;
   padding: 7px 14px;
-  background: rgba(16, 22, 36, 0.85);
+  background: rgba(16, 22, 36, calc(var(--bg-opacity, 0.92) * 0.92));
   border-top: 1px solid rgba(255, 255, 255, 0.07);
   gap: 12px;
 }
@@ -518,7 +538,7 @@ html, body, #root {
   align-items: center;
   justify-content: space-between;
   padding: 5px 14px;
-  background: rgba(12, 17, 28, 0.90);
+  background: rgba(12, 17, 28, calc(var(--bg-opacity, 0.92) * 0.96));
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   font-size: 10.5px;
   color: var(--text-muted);
@@ -1101,7 +1121,12 @@ html, body, #root {
    Light Mode (Ice Blue Gradient Spotlight Theme — Modern & High Contrast)
    ========================================================================== */
 .spotlight-window.theme-light {
-  background: linear-gradient(135deg, #f4f8fe 0%, #e8f2fe 45%, #dbeafe 100%) !important;
+  background: linear-gradient(
+    135deg,
+    rgba(244, 248, 254, var(--bg-opacity, 0.95)) 0%,
+    rgba(232, 242, 254, var(--bg-opacity, 0.95)) 45%,
+    rgba(219, 234, 254, var(--bg-opacity, 0.95)) 100%
+  ) !important;
   backdrop-filter: blur(50px) saturate(180%) contrast(100%) !important;
   -webkit-backdrop-filter: blur(50px) saturate(180%) contrast(100%) !important;
   border: 1px solid rgba(147, 197, 253, 0.8) !important;
@@ -1120,7 +1145,11 @@ html, body, #root {
 
 /* Header & Search Bar */
 .spotlight-window.theme-light .spotlight-header {
-  background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 100%) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, var(--bg-opacity, 0.95)) 0%,
+    rgba(240, 247, 255, var(--bg-opacity, 0.95)) 100%
+  ) !important;
   border-bottom: 1px solid rgba(191, 219, 254, 0.8) !important;
 }
 
@@ -1300,7 +1329,11 @@ html, body, #root {
 
 /* Preview Pane */
 .spotlight-window.theme-light .preview-pane {
-  background: linear-gradient(180deg, #f0f7ff 0%, #e6f0fd 100%) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(240, 247, 255, var(--bg-opacity, 0.95)) 0%,
+    rgba(230, 240, 253, var(--bg-opacity, 0.95)) 100%
+  ) !important;
   border-top: 1px solid rgba(191, 219, 254, 0.8) !important;
 }
 
@@ -1345,7 +1378,11 @@ html, body, #root {
 
 /* Status Bar */
 .spotlight-window.theme-light .app-status-bar {
-  background: linear-gradient(180deg, #e4effd 0%, #d8e8fc 100%) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(228, 239, 253, var(--bg-opacity, 0.95)) 0%,
+    rgba(216, 232, 252, var(--bg-opacity, 0.95)) 100%
+  ) !important;
   border-top: 1px solid rgba(191, 219, 254, 0.9) !important;
   color: #334155 !important;
 }
@@ -1774,3 +1811,111 @@ html, body, #root {
 .spotlight-window.theme-light .context-menu-separator {
   background: rgba(147, 197, 253, 0.5) !important;
 }
+
+/* ==========================================================================
+   Background Opacity Slider & Presets
+   ========================================================================== */
+.opacity-slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.opacity-slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.opacity-value-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.opacity-slider-input {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+  cursor: pointer;
+  accent-color: #06b6d4;
+  margin: 4px 0;
+}
+
+.opacity-preset-group {
+  display: flex;
+  gap: 8px;
+}
+
+.opacity-preset-btn {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.opacity-preset-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.opacity-preset-btn.active {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.5);
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+/* Light Theme overrides for Opacity Slider */
+.spotlight-window.theme-light .opacity-slider-container {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(147, 197, 253, 0.75) !important;
+}
+
+.spotlight-window.theme-light .opacity-value-badge {
+  color: #0284c7 !important;
+  background: rgba(2, 132, 199, 0.1) !important;
+  border: 1px solid rgba(2, 132, 199, 0.3) !important;
+}
+
+.spotlight-window.theme-light .opacity-slider-input {
+  background: rgba(147, 197, 253, 0.5) !important;
+  accent-color: #0284c7 !important;
+}
+
+.spotlight-window.theme-light .opacity-preset-btn {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(191, 219, 254, 0.8) !important;
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .opacity-preset-btn:hover {
+  background: #ffffff !important;
+  color: #1e40af !important;
+}
+
+.spotlight-window.theme-light .opacity-preset-btn.active {
+  background: rgba(37, 99, 235, 0.12) !important;
+  border-color: #2563eb !important;
+  color: #1d4ed8 !important;
+  font-weight: 600;
+}
+
