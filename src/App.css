@@ -1263,6 +1263,20 @@ html, body, #root {
   color: #64748b !important;
 }
 
+/* Empty State in Light Mode */
+.spotlight-window.theme-light .empty-title {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.spotlight-window.theme-light .empty-subtitle {
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .results-empty-state svg {
+  color: #2563eb !important;
+}
+
 /* Preview Pane */
 .spotlight-window.theme-light .preview-pane {
   background: linear-gradient(180deg, #f0f7ff 0%, #e6f0fd 100%) !important;
