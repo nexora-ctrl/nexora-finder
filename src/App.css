@@ -1069,23 +1069,24 @@ html, body, #root {
 }
 
 /* ==========================================================================
-   Light Mode (Apple Liquid Glass Bright Spotlight Theme)
+   Light Mode (Ice Blue Gradient Spotlight Theme — Modern & High Contrast)
    ========================================================================== */
 .spotlight-window.theme-light {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(246, 248, 252, 0.90) 100%) !important;
-  backdrop-filter: blur(60px) saturate(190%) contrast(100%) !important;
-  -webkit-backdrop-filter: blur(60px) saturate(190%) contrast(100%) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  background: linear-gradient(135deg, #f4f8fe 0%, #e8f2fe 45%, #dbeafe 100%) !important;
+  backdrop-filter: blur(50px) saturate(180%) contrast(100%) !important;
+  -webkit-backdrop-filter: blur(50px) saturate(180%) contrast(100%) !important;
+  border: 1px solid rgba(147, 197, 253, 0.7) !important;
   box-shadow: 
-    0 24px 54px rgba(0, 0, 0, 0.18),
-    inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 0 16px 0 rgba(0, 0, 0, 0.01) !important;
+    0 24px 60px rgba(30, 64, 175, 0.18),
+    0 8px 20px rgba(15, 23, 42, 0.06),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.95) !important;
   color: #0f172a !important;
 }
 
+/* Header & Search Bar */
 .spotlight-window.theme-light .spotlight-header {
-  background: rgba(255, 255, 255, 0.75) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 100%) !important;
+  border-bottom: 1px solid rgba(191, 219, 254, 0.8) !important;
 }
 
 .spotlight-window.theme-light.compact .spotlight-header {
@@ -1095,150 +1096,244 @@ html, body, #root {
 
 .spotlight-window.theme-light .search-input {
   color: #0f172a !important;
+  font-weight: 600 !important;
 }
 
 .spotlight-window.theme-light .search-input::placeholder {
-  color: #94a3b8 !important;
+  color: #64748b !important;
+  font-weight: 400 !important;
 }
 
 .spotlight-window.theme-light .search-icon {
-  color: #0284c7 !important;
+  color: #2563eb !important;
+}
+
+.spotlight-window.theme-light .search-icon-container {
+  filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.25)) !important;
 }
 
 .spotlight-window.theme-light .search-stats-badge {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  color: #475569 !important;
+  background: rgba(37, 99, 235, 0.08) !important;
+  border: 1px solid rgba(147, 197, 253, 0.8) !important;
+  color: #1d4ed8 !important;
+  font-weight: 600 !important;
 }
 
 .spotlight-window.theme-light .settings-btn {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  color: #475569 !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(191, 219, 254, 0.8) !important;
+  color: #2563eb !important;
 }
 
 .spotlight-window.theme-light .settings-btn:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 1px 4px rgba(37, 99, 235, 0.15) !important;
+}
+
+.spotlight-window.theme-light .search-clear-btn {
+  color: #64748b !important;
+}
+
+.spotlight-window.theme-light .search-clear-btn:hover {
   color: #0f172a !important;
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Category Filter Bar */
+.spotlight-window.theme-light .category-filter-bar {
+  background: rgba(244, 248, 254, 0.85) !important;
+  border-top: 1px solid rgba(191, 219, 254, 0.4) !important;
 }
 
 .spotlight-window.theme-light .category-pill {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  color: #475569 !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(191, 219, 254, 0.85) !important;
+  color: #334155 !important;
+  font-weight: 500 !important;
 }
 
 .spotlight-window.theme-light .category-pill:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
-  color: #0f172a !important;
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  border-color: #60a5fa !important;
 }
 
 .spotlight-window.theme-light .category-pill.active {
-  background: #0284c7 !important;
-  border-color: #0284c7 !important;
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%) !important;
+  border: 1px solid #2563eb !important;
   color: #ffffff !important;
-  box-shadow: 0 1px 4px rgba(2, 132, 199, 0.3) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
+}
+
+.spotlight-window.theme-light .category-pill.active svg {
+  color: #ffffff !important;
 }
 
 .spotlight-window.theme-light .drive-pill {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  color: #475569 !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(191, 219, 254, 0.85) !important;
+  color: #334155 !important;
+  font-weight: 500 !important;
+}
+
+.spotlight-window.theme-light .drive-pill:hover {
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  border-color: #60a5fa !important;
 }
 
 .spotlight-window.theme-light .drive-pill.active {
-  background: #0284c7 !important;
-  border-color: #0284c7 !important;
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%) !important;
+  border: 1px solid #2563eb !important;
   color: #ffffff !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35) !important;
 }
 
-.spotlight-window.theme-light .result-item:hover {
-  background: rgba(0, 0, 0, 0.04) !important;
+/* Results List */
+.spotlight-window.theme-light .results-list-container {
+  background: transparent !important;
 }
 
-.spotlight-window.theme-light .result-item.selected {
-  background: rgba(2, 132, 199, 0.12) !important;
-  border-left-color: #0284c7 !important;
+.spotlight-window.theme-light .result-row {
+  border-left: 3px solid transparent !important;
+  transition: all 0.1s ease !important;
 }
 
-.spotlight-window.theme-light .result-name {
+.spotlight-window.theme-light .result-row:hover {
+  background: rgba(255, 255, 255, 0.65) !important;
+}
+
+.spotlight-window.theme-light .result-row.selected {
+  background: linear-gradient(90deg, rgba(219, 234, 254, 0.95) 0%, rgba(239, 246, 255, 0.85) 100%) !important;
+  border-left: 3px solid #2563eb !important;
+}
+
+.spotlight-window.theme-light .result-icon-cell {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(191, 219, 254, 0.7) !important;
+  color: #2563eb !important;
+}
+
+.spotlight-window.theme-light .result-filename {
   color: #0f172a !important;
+  font-weight: 600 !important;
 }
 
-.spotlight-window.theme-light .result-path {
+.spotlight-window.theme-light .result-path-row {
+  color: #475569 !important;
+  font-weight: 450 !important;
+}
+
+.spotlight-window.theme-light .result-ext-badge {
+  background: rgba(37, 99, 235, 0.09) !important;
+  color: #1d4ed8 !important;
+  border: 1px solid rgba(147, 197, 253, 0.7) !important;
+  font-weight: 600 !important;
+}
+
+.spotlight-window.theme-light .result-size {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+.spotlight-window.theme-light .result-date {
   color: #64748b !important;
 }
 
-.spotlight-window.theme-light .result-meta {
-  color: #64748b !important;
-}
-
-.spotlight-window.theme-light .result-icon-box {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.07) !important;
-}
-
+/* Preview Pane */
 .spotlight-window.theme-light .preview-pane {
-  background: rgba(246, 248, 252, 0.9) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-}
-
-.spotlight-window.theme-light .preview-title {
-  color: #0f172a !important;
+  background: linear-gradient(180deg, #f0f7ff 0%, #e6f0fd 100%) !important;
+  border-top: 1px solid rgba(191, 219, 254, 0.8) !important;
 }
 
 .spotlight-window.theme-light .preview-path {
-  color: #64748b !important;
-}
-
-.spotlight-window.theme-light .preview-btn {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-color: rgba(0, 0, 0, 0.09) !important;
-  color: #334155 !important;
-}
-
-.spotlight-window.theme-light .preview-btn:hover {
-  background: rgba(0, 0, 0, 0.09) !important;
   color: #0f172a !important;
+  font-weight: 500 !important;
 }
 
-.spotlight-window.theme-light .preview-btn.primary {
-  background: #0284c7 !important;
-  border-color: #0284c7 !important;
-  color: #ffffff !important;
-}
-
-.spotlight-window.theme-light .status-bar {
-  background: rgba(241, 245, 249, 0.95) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
-  color: #64748b !important;
-}
-
-.spotlight-window.theme-light .reindex-btn {
-  background: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
+.spotlight-window.theme-light .preview-meta {
   color: #475569 !important;
 }
 
-.spotlight-window.theme-light .reindex-btn:hover {
-  background: rgba(0, 0, 0, 0.08) !important;
-  color: #0f172a !important;
+.spotlight-window.theme-light .action-btn.primary {
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%) !important;
+  border: 1px solid #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3) !important;
 }
 
-/* Light Theme for Settings Modal */
+.spotlight-window.theme-light .action-btn.primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0369a1 100%) !important;
+}
+
+.spotlight-window.theme-light .action-btn.secondary {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(191, 219, 254, 0.8) !important;
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+.spotlight-window.theme-light .action-btn.secondary:hover {
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  border-color: #60a5fa !important;
+}
+
+.spotlight-window.theme-light .action-btn kbd {
+  background: rgba(219, 234, 254, 0.65) !important;
+  color: #1e40af !important;
+  border: 1px solid rgba(147, 197, 253, 0.8) !important;
+}
+
+/* Status Bar */
+.spotlight-window.theme-light .app-status-bar {
+  background: linear-gradient(180deg, #e4effd 0%, #d8e8fc 100%) !important;
+  border-top: 1px solid rgba(191, 219, 254, 0.9) !important;
+  color: #334155 !important;
+}
+
+.spotlight-window.theme-light .status-item.ready {
+  color: #059669 !important;
+  font-weight: 500 !important;
+}
+
+.spotlight-window.theme-light .reindex-shortcut-btn {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(191, 219, 254, 0.85) !important;
+  color: #1d4ed8 !important;
+  font-weight: 500 !important;
+}
+
+.spotlight-window.theme-light .reindex-shortcut-btn:hover {
+  background: #ffffff !important;
+  color: #1e40af !important;
+  border-color: #3b82f6 !important;
+}
+
+.spotlight-window.theme-light .reindex-shortcut-btn kbd {
+  background: rgba(219, 234, 254, 0.85) !important;
+  border: 1px solid rgba(147, 197, 253, 0.9) !important;
+  color: #1e40af !important;
+}
+
+/* Light Theme Settings Modal */
 .spotlight-window.theme-light .settings-overlay {
   background: rgba(15, 23, 42, 0.35) !important;
 }
 
 .spotlight-window.theme-light .settings-modal {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border: 1px solid rgba(0, 0, 0, 0.12) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22) !important;
+  background: linear-gradient(145deg, #ffffff 0%, #f0f6ff 50%, #e0effe 100%) !important;
+  border: 1px solid rgba(147, 197, 253, 0.75) !important;
+  box-shadow: 0 24px 60px rgba(30, 64, 175, 0.22) !important;
   color: #0f172a !important;
 }
 
 .spotlight-window.theme-light .settings-header {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 1px solid rgba(191, 219, 254, 0.75) !important;
 }
 
 .spotlight-window.theme-light .settings-title {
@@ -1246,88 +1341,149 @@ html, body, #root {
 }
 
 .spotlight-window.theme-light .settings-close-btn {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  color: #475569 !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(191, 219, 254, 0.8) !important;
+  color: #2563eb !important;
 }
 
 .spotlight-window.theme-light .settings-close-btn:hover {
-  background: rgba(0, 0, 0, 0.1) !important;
-  color: #0f172a !important;
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  border-color: #3b82f6 !important;
 }
 
 .spotlight-window.theme-light .setting-card,
 .spotlight-window.theme-light .setting-card-section,
 .spotlight-window.theme-light .setting-card-info {
-  background: rgba(0, 0, 0, 0.035) !important;
-  border-color: rgba(0, 0, 0, 0.07) !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(191, 219, 254, 0.75) !important;
 }
 
 .spotlight-window.theme-light .setting-card:hover {
-  background: rgba(0, 0, 0, 0.055) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.spotlight-window.theme-light .setting-icon-box {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border: 1px solid rgba(147, 197, 253, 0.7) !important;
 }
 
 .spotlight-window.theme-light .setting-label {
   color: #0f172a !important;
+  font-weight: 600 !important;
 }
 
 .spotlight-window.theme-light .setting-desc {
-  color: #64748b !important;
+  color: #475569 !important;
 }
 
 .spotlight-window.theme-light .theme-pill {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  color: #475569 !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(191, 219, 254, 0.8) !important;
+  color: #334155 !important;
 }
 
 .spotlight-window.theme-light .theme-pill.active {
-  background: rgba(2, 132, 199, 0.14) !important;
-  border-color: #0284c7 !important;
-  color: #0284c7 !important;
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%) !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
 }
 
 .spotlight-window.theme-light .scope-pill {
-  background: rgba(0, 0, 0, 0.05) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  color: #475569 !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(191, 219, 254, 0.8) !important;
+  color: #334155 !important;
 }
 
 .spotlight-window.theme-light .scope-pill.active {
-  background: rgba(2, 132, 199, 0.14) !important;
-  border-color: #0284c7 !important;
-  color: #0284c7 !important;
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%) !important;
+  border-color: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
 }
 
 .spotlight-window.theme-light .custom-drives-list {
-  background: rgba(0, 0, 0, 0.03) !important;
-  border-color: rgba(0, 0, 0, 0.06) !important;
+  background: rgba(239, 246, 255, 0.65) !important;
+  border: 1px solid rgba(191, 219, 254, 0.75) !important;
+}
+
+.spotlight-window.theme-light .custom-drive-item {
+  background: rgba(255, 255, 255, 0.85) !important;
+}
+
+.spotlight-window.theme-light .custom-drive-item.selected {
+  background: rgba(219, 234, 254, 0.95) !important;
+  border-color: #60a5fa !important;
 }
 
 .spotlight-window.theme-light .custom-drive-letter {
   color: #0f172a !important;
+  font-weight: 700 !important;
 }
 
 .spotlight-window.theme-light .custom-drive-label {
-  color: #64748b !important;
+  color: #475569 !important;
 }
 
 .spotlight-window.theme-light .custom-drive-size {
-  color: #94a3b8 !important;
+  color: #64748b !important;
 }
 
 .spotlight-window.theme-light .drive-check-box {
-  border-color: rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(37, 99, 235, 0.4) !important;
 }
 
 .spotlight-window.theme-light .drive-check-box.checked {
-  background: #0284c7 !important;
-  border-color: #0284c7 !important;
+  background: #2563eb !important;
+  border-color: #2563eb !important;
   color: #fff !important;
 }
 
+.spotlight-window.theme-light .toggle-switch.active {
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%) !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.3) !important;
+}
+
+.spotlight-window.theme-light .shortcut-pill-item {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(191, 219, 254, 0.75) !important;
+  color: #334155 !important;
+}
+
+.spotlight-window.theme-light .shortcut-pill-item kbd {
+  background: rgba(219, 234, 254, 0.8) !important;
+  border: 1px solid rgba(147, 197, 253, 0.8) !important;
+  color: #1e40af !important;
+}
+
+.spotlight-window.theme-light .setting-card-action {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95) 0%, rgba(219, 234, 254, 0.9) 100%) !important;
+  border: 1px solid rgba(147, 197, 253, 0.8) !important;
+}
+
+.spotlight-window.theme-light .index-summary-count {
+  color: #1d4ed8 !important;
+}
+
+.spotlight-window.theme-light .index-summary-label {
+  color: #475569 !important;
+}
+
+.spotlight-window.theme-light .settings-reindex-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 100%) !important;
+  border: 1px solid #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3) !important;
+}
+
+.spotlight-window.theme-light .settings-reindex-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0369a1 100%) !important;
+}
+
 .spotlight-window.theme-light .settings-footer {
-  background: rgba(0, 0, 0, 0.03) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
-  color: #64748b !important;
+  background: rgba(228, 240, 255, 0.75) !important;
+  border-top: 1px solid rgba(191, 219, 254, 0.75) !important;
+  color: #475569 !important;
 }
