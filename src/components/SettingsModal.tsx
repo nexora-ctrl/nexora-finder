@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck } from "lucide-react";
+import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive } from "lucide-react";
 import { isEnabled, enable, disable } from "@tauri-apps/plugin-autostart";
+import { invoke } from "@tauri-apps/api/core";
+import { DriveInfo } from "../types";
+import { formatBytes } from "../utils/format";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -8,6 +11,7 @@ interface SettingsModalProps {
   onReindex: () => void;
   totalIndexed: number;
   isIndexing: boolean;
+  availableDrives: DriveInfo[];
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -16,10 +20,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onReindex,
   totalIndexed,
   isIndexing,
+  availableDrives,
 }) => {
   const [autostart, setAutostart] = useState(false);
   const [minimizeToTray, setMinimizeToTray] = useState(true);
   const [startMinimized, setStartMinimized] = useState(true);
+  const [driveScope, setDriveScope] = useState<"all" | "custom">("all");
+  const [selectedDrives, setSelectedDrives] = useState<string[]>([]);
   const [savedNotice, setSavedNotice] = useState(false);
 
   useEffect(() => {
@@ -38,7 +45,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     if (storedStartMin !== null) {
       setStartMinimized(storedStartMin === "true");
     }
-  }, [isOpen]);
+
+    // Load drive scope settings
+    invoke<string[]>("get_indexed_drives")
+      .then((drives) => {
+        if (drives.length === 1 && drives[0] === "ALL") {
+          setDriveScope("all");
+          setSelectedDrives(availableDrives.map((d) => d.letter));
+        } else {
+          setDriveScope("custom");
+          setSelectedDrives(drives);
+        }
+      })
+      .catch(() => {
+        setDriveScope("all");
+        setSelectedDrives(availableDrives.map((d) => d.letter));
+      });
+  }, [isOpen, availableDrives]);
 
   if (!isOpen) return null;
 
@@ -71,6 +94,42 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     showSavedToast();
   };
 
+  const handleSelectDriveScope = async (scope: "all" | "custom") => {
+    setDriveScope(scope);
+    try {
+      if (scope === "all") {
+        await invoke("set_indexed_drives", { drives: ["ALL"] });
+      } else {
+        const toSave = selectedDrives.length > 0 ? selectedDrives : availableDrives.map((d) => d.letter);
+        setSelectedDrives(toSave);
+        await invoke("set_indexed_drives", { drives: toSave });
+      }
+      showSavedToast();
+    } catch (err) {
+      console.error("Failed to update drive scope:", err);
+    }
+  };
+
+  const handleToggleDriveChoice = async (letter: string) => {
+    let nextList: string[];
+    if (selectedDrives.includes(letter)) {
+      if (selectedDrives.length === 1) {
+        // Prevent deselecting all drives
+        return;
+      }
+      nextList = selectedDrives.filter((d) => d !== letter);
+    } else {
+      nextList = [...selectedDrives, letter];
+    }
+    setSelectedDrives(nextList);
+    try {
+      await invoke("set_indexed_drives", { drives: nextList });
+      showSavedToast();
+    } catch (err) {
+      console.error("Failed to save selected drives:", err);
+    }
+  };
+
   const showSavedToast = () => {
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 1800);
@@ -95,6 +154,66 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="settings-body">
+          {/* Setting: Drive Scanning Scope */}
+          <div className="setting-card-section">
+            <div className="setting-card-header">
+              <div className="setting-icon-box">
+                <HardDrive size={18} className="text-cyan-400" />
+              </div>
+              <div className="setting-text">
+                <span className="setting-label">Cakupan Drive Pemindaian</span>
+                <p className="setting-desc">
+                  Atur apakah pencarian membaca seluruh drive atau hanya drive spesifik yang dipilih.
+                </p>
+              </div>
+            </div>
+
+            <div className="drive-scope-options">
+              <button
+                type="button"
+                className={`scope-pill ${driveScope === "all" ? "active" : ""}`}
+                onClick={() => handleSelectDriveScope("all")}
+              >
+                <span>Semua Drive (Default)</span>
+              </button>
+              <button
+                type="button"
+                className={`scope-pill ${driveScope === "custom" ? "active" : ""}`}
+                onClick={() => handleSelectDriveScope("custom")}
+              >
+                <span>Pilih Drive Spesifik</span>
+              </button>
+            </div>
+
+            {driveScope === "custom" && (
+              <div className="custom-drives-list">
+                {availableDrives.map((d) => {
+                  const isChecked = selectedDrives.includes(d.letter);
+                  return (
+                    <div
+                      key={d.letter}
+                      className={`custom-drive-item ${isChecked ? "selected" : ""}`}
+                      onClick={() => handleToggleDriveChoice(d.letter)}
+                    >
+                      <div className="custom-drive-left">
+                        <span className={`drive-check-box ${isChecked ? "checked" : ""}`}>
+                          {isChecked && <Check size={11} strokeWidth={3} />}
+                        </span>
+                        <span className="custom-drive-letter">{d.letter}</span>
+                        <span className="custom-drive-label">
+                          {d.label ? `(${d.label})` : d.drive_type}
+                        </span>
+                      </div>
+                      <span className="custom-drive-size">
+                        {formatBytes(d.total_space_bytes)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Setting 1: Windows Startup */}
           <div className="setting-card">
             <div className="setting-icon-box">
@@ -184,7 +303,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <span className="index-summary-count">
                 {totalIndexed.toLocaleString("id-ID")}
               </span>
-              <span className="index-summary-label">Berkas & Folder Terindeks</span>
+              <span className="index-summary-label">
+                {driveScope === "all"
+                  ? "Semua Drive Terindeks"
+                  : `Drive (${selectedDrives.join(", ")}) Terindeks`}
+              </span>
             </div>
             <button
               type="button"
@@ -193,7 +316,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               disabled={isIndexing}
             >
               <RefreshCw size={13} className={isIndexing ? "animate-spin" : ""} />
-              <span>{isIndexing ? "Memindai..." : "Indeks Ulang Semua Drive"}</span>
+              <span>
+                {isIndexing
+                  ? "Memindai..."
+                  : driveScope === "all"
+                  ? "Indeks Ulang Semua Drive"
+                  : "Indeks Ulang Drive Terpilih"}
+              </span>
             </button>
           </div>
         </div>

@@ -61,6 +61,9 @@ pub fn run() {
             commands::get_stats,
             commands::hide_window,
             commands::check_usn_status,
+            commands::set_window_compact,
+            commands::get_indexed_drives,
+            commands::set_indexed_drives,
         ])
         .setup(move |app| {
             // Register primary shortcut: Ctrl+Alt+S (requested) and Alt+Space
@@ -133,6 +136,21 @@ pub fn run() {
         .expect("error while running tauri application");
 }
 
+fn position_spotlight(window: &tauri::WebviewWindow) {
+    if let Ok(Some(monitor)) = window.current_monitor() {
+        let scale = window.scale_factor().unwrap_or(1.0);
+        let mon_pos = monitor.position();
+        let mon_size = monitor.size();
+        let mon_w = mon_size.width as f64 / scale;
+        let mon_h = mon_size.height as f64 / scale;
+        let x = (mon_pos.x as f64 / scale) + (mon_w - 800.0) / 2.0;
+        let y = (mon_pos.y as f64 / scale) + (mon_h * 0.22);
+        let _ = window.set_position(tauri::LogicalPosition::new(x, y));
+    } else {
+        let _ = window.center();
+    }
+}
+
 fn toggle_window(window: &tauri::WebviewWindow) {
     let is_visible = window.is_visible().unwrap_or(false);
     let is_focused = window.is_focused().unwrap_or(false);
@@ -143,7 +161,7 @@ fn toggle_window(window: &tauri::WebviewWindow) {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
-        let _ = window.center();
+        position_spotlight(window);
 
         #[cfg(target_os = "windows")]
         {

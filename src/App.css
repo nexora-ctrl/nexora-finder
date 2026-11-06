@@ -878,3 +878,153 @@ html, body, #root {
   color: #34d399;
   font-weight: 500;
 }
+
+/* ==========================================================================
+   Compact Window Mode (Initial Single Search Bar View)
+   ========================================================================== */
+.spotlight-window.compact {
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 
+    0 16px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.spotlight-window.compact .spotlight-header {
+  border-bottom: none !important;
+  background: transparent !important;
+  height: 100%;
+  justify-content: center;
+}
+
+.spotlight-window.compact .search-bar-wrapper {
+  height: 54px;
+}
+
+/* ==========================================================================
+   Settings Modal — Drive Scope Configuration
+   ========================================================================== */
+.setting-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.setting-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.drive-scope-options {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.scope-pill {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.scope-pill:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.scope-pill.active {
+  background: rgba(6, 182, 212, 0.18);
+  border-color: rgba(6, 182, 212, 0.5);
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.custom-drives-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.custom-drive-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  transition: all 0.12s ease;
+}
+
+.custom-drive-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.custom-drive-item.selected {
+  background: rgba(6, 182, 212, 0.08);
+  border-color: rgba(6, 182, 212, 0.2);
+}
+
+.custom-drive-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drive-check-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition: all 0.15s ease;
+}
+
+.drive-check-box.checked {
+  background: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  color: #fff;
+}
+
+.custom-drive-letter {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.custom-drive-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.custom-drive-size {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}

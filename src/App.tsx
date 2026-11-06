@@ -29,7 +29,16 @@ export function App() {
   const [indexingStatus, setIndexingStatus] = useState<IndexingStatus | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+  const isCompact = query.trim().length === 0 && !isSettingsOpen;
+
   const debounceTimer = useRef<number | null>(null);
+
+  // Sync compact window mode with Tauri backend
+  useEffect(() => {
+    invoke("set_window_compact", { compact: isCompact }).catch((err) =>
+      console.warn("Failed to set window compact mode:", err)
+    );
+  }, [isCompact]);
 
   // Initial load: Fetch drives, status, and recent items
   useEffect(() => {
@@ -188,7 +197,7 @@ export function App() {
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (results[selectedIndex]) {
+      if (!isCompact && results[selectedIndex]) {
         if (e.shiftKey) {
           handleRevealItem(results[selectedIndex]);
         } else {
@@ -210,7 +219,7 @@ export function App() {
   const selectedItem = results[selectedIndex] ?? null;
 
   return (
-    <div className="spotlight-window">
+    <div className={`spotlight-window ${isCompact ? "compact" : ""}`}>
       <header className="spotlight-header">
         <SearchBar
           value={query}
@@ -223,34 +232,40 @@ export function App() {
           onOpenSettings={() => setIsSettingsOpen(true)}
         />
 
-        <CategoryFilter
-          activeCategory={activeCategory}
-          onSelectCategory={setActiveCategory}
-          drives={drives}
-          activeDrive={activeDrive}
-          onSelectDrive={setActiveDrive}
-        />
+        {!isCompact && (
+          <CategoryFilter
+            activeCategory={activeCategory}
+            onSelectCategory={setActiveCategory}
+            drives={drives}
+            activeDrive={activeDrive}
+            onSelectDrive={setActiveDrive}
+          />
+        )}
       </header>
 
-      <main className="spotlight-body">
-        <ResultsList
-          items={results}
-          selectedIndex={selectedIndex}
-          onSelect={setSelectedIndex}
-          onOpen={handleOpenItem}
-          query={query}
-          isLoading={isLoading}
-        />
-      </main>
+      {!isCompact && (
+        <>
+          <main className="spotlight-body">
+            <ResultsList
+              items={results}
+              selectedIndex={selectedIndex}
+              onSelect={setSelectedIndex}
+              onOpen={handleOpenItem}
+              query={query}
+              isLoading={isLoading}
+            />
+          </main>
 
-      <PreviewPane
-        item={selectedItem}
-        onOpen={handleOpenItem}
-        onReveal={handleRevealItem}
-        onCopyPath={handleCopyPath}
-      />
+          <PreviewPane
+            item={selectedItem}
+            onOpen={handleOpenItem}
+            onReveal={handleRevealItem}
+            onCopyPath={handleCopyPath}
+          />
 
-      <StatusBar status={indexingStatus} onReindex={handleReindex} />
+          <StatusBar status={indexingStatus} onReindex={handleReindex} />
+        </>
+      )}
 
       <SettingsModal
         isOpen={isSettingsOpen}
@@ -258,6 +273,7 @@ export function App() {
         onReindex={handleReindex}
         totalIndexed={indexingStatus?.total_indexed ?? 0}
         isIndexing={indexingStatus?.is_indexing ?? false}
+        availableDrives={drives}
       />
     </div>
   );

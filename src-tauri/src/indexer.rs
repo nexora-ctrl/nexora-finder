@@ -6,7 +6,7 @@ use tauri::{AppHandle, Emitter};
 use crate::db::Database;
 use crate::drive::get_available_drives;
 use crate::search::SearchEngine;
-use crate::types::{FileItem, IndexingStatus};
+use crate::types::{DriveInfo, FileItem, IndexingStatus};
 
 pub struct Indexer {
     pub db: Database,
@@ -56,7 +56,25 @@ impl Indexer {
             .name("nexora-indexer".into())
             .spawn(move || {
             let start_time = Instant::now();
-            let drives = get_available_drives();
+            let saved_drives = indexer.db.get_metadata("enabled_drives").unwrap_or(None);
+            let available = get_available_drives();
+            let drives: Vec<DriveInfo> = if let Some(s) = saved_drives {
+                let enabled_set: std::collections::HashSet<String> = s
+                    .split(',')
+                    .map(|x| x.trim().to_uppercase())
+                    .filter(|x| !x.is_empty())
+                    .collect();
+                if enabled_set.is_empty() || enabled_set.contains("ALL") {
+                    available
+                } else {
+                    available
+                        .into_iter()
+                        .filter(|d| enabled_set.contains(&d.letter.to_uppercase()))
+                        .collect()
+                }
+            } else {
+                available
+            };
 
             let mut batch = Vec::with_capacity(2500);
             let mut count_since_commit = 0;
