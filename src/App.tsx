@@ -11,6 +11,7 @@ import {
 import { SearchBar } from "./components/SearchBar";
 import { CategoryFilter } from "./components/CategoryFilter";
 import { ResultsList } from "./components/ResultsList";
+import { ThumbnailGrid } from "./components/ThumbnailGrid";
 import { PreviewPane } from "./components/PreviewPane";
 import { StatusBar } from "./components/StatusBar";
 import { SettingsModal } from "./components/SettingsModal";
@@ -28,10 +29,22 @@ export function App() {
   const [drives, setDrives] = useState<DriveInfo[]>([]);
   const [indexingStatus, setIndexingStatus] = useState<IndexingStatus | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
+    const saved = localStorage.getItem("nexora_view_mode");
+    return saved === "grid" ? "grid" : "list";
+  });
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     const saved = localStorage.getItem("nexora_theme");
     return saved === "light" ? "light" : "dark";
   });
+
+  const handleToggleViewMode = () => {
+    setViewMode((prev) => {
+      const next = prev === "list" ? "grid" : "list";
+      localStorage.setItem("nexora_view_mode", next);
+      return next;
+    });
+  };
 
   const isCompact = query.trim().length === 0 && !isSettingsOpen;
 
@@ -212,10 +225,17 @@ export function App() {
 
   // Keyboard navigation & Shortcuts
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const gridCols = 4; // approximate columns for thumbnail grid navigation
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+      setSelectedIndex((prev) => Math.min(prev + (viewMode === "grid" ? gridCols : 1), results.length - 1));
     } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => Math.max(prev - (viewMode === "grid" ? gridCols : 1), 0));
+    } else if (e.key === "ArrowRight" && viewMode === "grid") {
+      e.preventDefault();
+      setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
+    } else if (e.key === "ArrowLeft" && viewMode === "grid") {
       e.preventDefault();
       setSelectedIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === "Enter") {
@@ -253,12 +273,21 @@ export function App() {
           elapsedMs={elapsedMs}
           matchCount={totalMatched}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          viewMode={viewMode}
+          onToggleViewMode={handleToggleViewMode}
         />
 
         {!isCompact && (
           <CategoryFilter
             activeCategory={activeCategory}
-            onSelectCategory={setActiveCategory}
+            onSelectCategory={(cat) => {
+              setActiveCategory(cat);
+              // Auto-switch to grid view if user clicks "image" category
+              if (cat === "image") {
+                setViewMode("grid");
+                localStorage.setItem("nexora_view_mode", "grid");
+              }
+            }}
             drives={drives}
             activeDrive={activeDrive}
             onSelectDrive={setActiveDrive}
@@ -269,14 +298,25 @@ export function App() {
       {!isCompact && (
         <>
           <main className="spotlight-body">
-            <ResultsList
-              items={results}
-              selectedIndex={selectedIndex}
-              onSelect={setSelectedIndex}
-              onOpen={handleOpenItem}
-              query={query}
-              isLoading={isLoading}
-            />
+            {viewMode === "grid" ? (
+              <ThumbnailGrid
+                items={results}
+                selectedIndex={selectedIndex}
+                onSelect={setSelectedIndex}
+                onOpen={handleOpenItem}
+                query={query}
+                isLoading={isLoading}
+              />
+            ) : (
+              <ResultsList
+                items={results}
+                selectedIndex={selectedIndex}
+                onSelect={setSelectedIndex}
+                onOpen={handleOpenItem}
+                query={query}
+                isLoading={isLoading}
+              />
+            )}
           </main>
 
           <PreviewPane

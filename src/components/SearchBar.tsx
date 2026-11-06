@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { Search, X, Loader2, Settings } from "lucide-react";
+import { Search, X, Loader2, Settings, LayoutGrid, List } from "lucide-react";
 
 interface SearchBarProps {
   value: string;
@@ -10,6 +10,8 @@ interface SearchBarProps {
   elapsedMs: number | null;
   matchCount: number | null;
   onOpenSettings: () => void;
+  viewMode?: "list" | "grid";
+  onToggleViewMode?: () => void;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -21,6 +23,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   elapsedMs,
   matchCount,
   onOpenSettings,
+  viewMode = "list",
+  onToggleViewMode,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -55,6 +59,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <span className="search-stats-badge">
             {matchCount.toLocaleString("id-ID")} hasil ({elapsedMs.toFixed(1)} ms)
           </span>
+        )}
+
+        {onToggleViewMode && (
+          <button
+            type="button"
+            className="search-viewmode-btn"
+            onClick={onToggleViewMode}
+            title={viewMode === "grid" ? "Beralih ke Tampilan Daftar (List)" : "Beralih ke Tampilan Thumbnail (Grid)"}
+          >
+            {viewMode === "grid" ? <List size={16} /> : <LayoutGrid size={16} />}
+          </button>
         )}
 
         {value.length > 0 && (

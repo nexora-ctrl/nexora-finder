@@ -4,6 +4,7 @@ mod db;
 mod drive;
 mod indexer;
 mod search;
+mod thumbnail;
 mod types;
 mod usn;
 mod watcher;
@@ -30,6 +31,7 @@ pub fn run() {
         db: db.clone(),
         search: search.clone(),
         indexer: indexer.clone(),
+        thumbnails: thumbnail::ThumbnailCache::new(),
     };
 
     tauri::Builder::default()
@@ -56,6 +58,7 @@ pub fn run() {
             commands::start_indexing,
             commands::open_item,
             commands::reveal_item,
+            commands::get_thumbnail,
             commands::get_recent_files,
             commands::get_drives,
             commands::get_stats,

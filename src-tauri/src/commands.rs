@@ -5,12 +5,14 @@ use crate::db::Database;
 use crate::drive::get_available_drives;
 use crate::indexer::Indexer;
 use crate::search::SearchEngine;
+use crate::thumbnail::{ThumbnailCache, get_file_thumbnail};
 use crate::types::{DriveInfo, FileItem, IndexStats, IndexingStatus, SearchQuery, SearchResult};
 
 pub struct AppState {
     pub db: Database,
     pub search: SearchEngine,
     pub indexer: Arc<Indexer>,
+    pub thumbnails: ThumbnailCache,
 }
 
 #[tauri::command]
@@ -62,6 +64,26 @@ pub async fn open_item(path: String) -> Result<(), String> {
 #[tauri::command]
 pub async fn reveal_item(path: String) -> Result<(), String> {
     reveal_in_explorer(&path)
+}
+
+#[tauri::command]
+pub async fn get_thumbnail(
+    path: String,
+    size: Option<u32>,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    if let Some(cached) = state.thumbnails.get_cached(&path) {
+        return Ok(cached);
+    }
+
+    let target_sz = size.unwrap_or(128).clamp(32, 512);
+    let path_clone = path.clone();
+    let res = tokio::task::spawn_blocking(move || {
+        get_file_thumbnail(&path_clone, target_sz)
+    }).await.map_err(|e| e.to_string())??;
+
+    state.thumbnails.insert(path, res.clone());
+    Ok(res)
 }
 
 #[tauri::command]
