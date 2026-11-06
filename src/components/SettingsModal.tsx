@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive, Sun, Moon } from "lucide-react";
+import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive, Sun, Moon, Sparkles } from "lucide-react";
 import { isEnabled, enable, disable } from "@tauri-apps/plugin-autostart";
 import { invoke } from "@tauri-apps/api/core";
 import { DriveInfo } from "../types";
@@ -14,6 +14,8 @@ interface SettingsModalProps {
   availableDrives: DriveInfo[];
   theme: "dark" | "light";
   onThemeChange: (theme: "dark" | "light") => void;
+  onCheckUpdate: () => void;
+  isCheckingUpdate: boolean;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -25,6 +27,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   availableDrives,
   theme,
   onThemeChange,
+  onCheckUpdate,
+  isCheckingUpdate,
 }) => {
   const [autostart, setAutostart] = useState(false);
   const [minimizeToTray, setMinimizeToTray] = useState(true);
@@ -375,8 +379,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
         </div>
 
-        <div className="settings-footer">
-          <span className="version-tag">Nexora Finder • Beta v0.2.0</span>
+        <div className="settings-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span className="version-tag">Nexora Finder • Beta v0.2.0</span>
+            <button
+              type="button"
+              onClick={onCheckUpdate}
+              disabled={isCheckingUpdate}
+              style={{
+                background: "rgba(59, 130, 246, 0.12)",
+                border: "1px solid rgba(59, 130, 246, 0.3)",
+                color: "var(--accent-primary, #3b82f6)",
+                padding: "3px 8px",
+                borderRadius: 6,
+                fontSize: 11,
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                cursor: isCheckingUpdate ? "wait" : "pointer",
+                transition: "all 0.15s ease",
+              }}
+              title="Periksa apakah ada versi baru di GitHub"
+            >
+              <Sparkles size={11} className={isCheckingUpdate ? "animate-spin" : ""} />
+              <span>{isCheckingUpdate ? "Memeriksa..." : "Periksa Pembaruan"}</span>
+            </button>
+          </div>
           {savedNotice && (
             <span className="saved-notice">
               <Check size={12} className="text-emerald-400" /> Tersimpan

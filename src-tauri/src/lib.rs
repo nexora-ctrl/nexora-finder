@@ -197,5 +197,6 @@ fn toggle_window(window: &tauri::WebviewWindow) {
         }
 
         let _ = window.emit("focus-search", ());
+        let _ = window.emit("window-shown", ());
     }
 }

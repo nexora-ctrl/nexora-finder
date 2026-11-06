@@ -48,6 +48,44 @@ export function App() {
     updaterObj: any;
   } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const checkedOnOpenRef = useRef(false);
+
+  const checkForUpdates = useCallback(async (manual = false) => {
+    try {
+      if (manual) setIsCheckingUpdate(true);
+      const update = await check();
+      if (update?.available) {
+        setUpdateAvailable({
+          version: update.version,
+          body: update.body,
+          updaterObj: update,
+        });
+
+        // Show native Windows tray notification
+        let hasPermission = await isPermissionGranted();
+        if (!hasPermission) {
+          const permission = await requestPermission();
+          hasPermission = permission === "granted";
+        }
+        if (hasPermission) {
+          sendNotification({
+            title: "Nexora Finder • Pembaruan Tersedia",
+            body: `Versi v${update.version} telah rilis! Klik untuk memperbarui otomatis.`,
+          });
+        }
+      } else if (manual) {
+        alert("Nexora Finder sudah menggunakan versi terbaru (v0.2.0-beta)!");
+      }
+    } catch (err) {
+      console.info("Update check skipped/failed:", err);
+      if (manual) {
+        alert("Belum dapat terhubung ke server pembaruan GitHub. Periksa koneksi internet Anda.");
+      }
+    } finally {
+      if (manual) setIsCheckingUpdate(false);
+    }
+  }, []);
 
   const handleToggleViewMode = () => {
     setViewMode((prev) => {
@@ -92,37 +130,17 @@ export function App() {
       })
       .catch((err) => console.error("Failed to load recent files:", err));
 
-    // Check for updates in background
-    const checkForUpdates = async () => {
-      try {
-        const update = await check();
-        if (update?.available) {
-          setUpdateAvailable({
-            version: update.version,
-            body: update.body,
-            updaterObj: update,
-          });
+    // Check for updates on startup (after 2 seconds) and every 4 hours
+    const updateTimer = setTimeout(() => checkForUpdates(false), 2000);
+    const intervalTimer = setInterval(() => checkForUpdates(false), 4 * 60 * 60 * 1000);
 
-          // Show native Windows tray notification
-          let hasPermission = await isPermissionGranted();
-          if (!hasPermission) {
-            const permission = await requestPermission();
-            hasPermission = permission === "granted";
-          }
-          if (hasPermission) {
-            sendNotification({
-              title: "Nexora Finder • Pembaruan Tersedia",
-              body: `Versi v${update.version} telah rilis! Klik untuk memperbarui otomatis.`,
-            });
-          }
-        }
-      } catch (err) {
-        console.info("Update check skipped/failed:", err);
+    // Listen when window is reopened from tray -> check updates once on first open
+    const unlistenShowPromise = listen("window-shown", () => {
+      if (!checkedOnOpenRef.current) {
+        checkedOnOpenRef.current = true;
+        setTimeout(() => checkForUpdates(false), 800);
       }
-    };
-
-    const updateTimer = setTimeout(checkForUpdates, 3000);
-    const intervalTimer = setInterval(checkForUpdates, 4 * 60 * 60 * 1000);
+    });
 
     // Listen to indexing updates from Rust backend
     const unlistenStatusPromise = listen<IndexingStatus>("indexing-status", (event) => {
@@ -153,11 +171,12 @@ export function App() {
     return () => {
       clearTimeout(updateTimer);
       clearInterval(intervalTimer);
+      unlistenShowPromise.then((unlisten) => unlisten());
       unlistenStatusPromise.then((unlisten) => unlisten());
       unlistenFocusPromise.then((unlisten) => unlisten());
       window.removeEventListener("keydown", handleGlobalWindowKeyDown);
     };
-  }, []);
+  }, [checkForUpdates]);
 
   // Search function
   const performSearch = useCallback(
@@ -419,6 +438,8 @@ export function App() {
         availableDrives={drives}
         theme={theme}
         onThemeChange={handleThemeChange}
+        onCheckUpdate={() => checkForUpdates(true)}
+        isCheckingUpdate={isCheckingUpdate}
       />
 
       {contextMenu && (
