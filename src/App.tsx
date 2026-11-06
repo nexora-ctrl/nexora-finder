@@ -17,6 +17,7 @@ import { StatusBar } from "./components/StatusBar";
 import { SettingsModal } from "./components/SettingsModal";
 import { ContextMenu } from "./components/ContextMenu";
 import { UpdateModal } from "./components/UpdateModal";
+import { UpdateStatusModal, UpdateStatusNotice } from "./components/UpdateStatusModal";
 import { check } from "@tauri-apps/plugin-updater";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -47,6 +48,7 @@ export function App() {
     body?: string;
     updaterObj: any;
   } | null>(null);
+  const [updateNotice, setUpdateNotice] = useState<UpdateStatusNotice | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const checkedOnOpenRef = useRef(false);
@@ -75,16 +77,28 @@ export function App() {
           });
         }
       } else if (manual) {
-        alert("Nexora Finder sudah menggunakan versi terbaru (v0.3.0-beta)!\nTidak ada pembaruan baru yang ditemukan.");
+        setUpdateNotice({
+          type: "success",
+          title: "Versi Terbaru Aktif",
+          message: "Nexora Finder sudah menggunakan versi terbaru (v0.3.0-beta). Semua fitur berjalan optimal.",
+        });
       }
     } catch (err: any) {
       console.info("Update check info:", err);
       if (manual) {
         const errMsg = String(err?.message || err || "");
         if (errMsg.includes("404") || errMsg.includes("status code: 404") || errMsg.includes("Could not fetch")) {
-          alert("Nexora Finder sudah dalam versi terbaru!\nBelum ada rilis baru yang dipublikasikan di repositori GitHub.");
+          setUpdateNotice({
+            type: "info",
+            title: "Nexora Finder v0.3.0-beta",
+            message: "Aplikasi Anda sudah dalam versi terbaru. Belum ada rilis baru yang dipublikasikan di repositori GitHub.",
+          });
         } else {
-          alert("Tidak dapat memeriksa pembaruan saat ini. Pastikan komputer terhubung ke internet.");
+          setUpdateNotice({
+            type: "warning",
+            title: "Pengecekan Tertunda",
+            message: "Tidak dapat memeriksa pembaruan saat ini. Pastikan komputer terhubung ke internet dan coba kembali nanti.",
+          });
         }
       }
     } finally {
@@ -474,11 +488,20 @@ export function App() {
             await relaunch();
           } catch (err) {
             console.error("Gagal update:", err);
-            alert("Gagal memasang update: " + String(err));
+            setUpdateNotice({
+              type: "warning",
+              title: "Gagal Memasang Pembaruan",
+              message: "Terjadi kendala saat mengunduh berkas instalasi pembaruan. Silakan coba kembali nanti.",
+            });
           } finally {
             setIsUpdating(false);
           }
         }}
+      />
+
+      <UpdateStatusModal
+        notice={updateNotice}
+        onClose={() => setUpdateNotice(null)}
       />
     </div>
   );

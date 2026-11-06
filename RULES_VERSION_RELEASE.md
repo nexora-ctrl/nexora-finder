@@ -60,3 +60,4 @@ Tampilkan ringkasan hasil rilis kepada pengguna dengan struktur:
 2. **Lokasi File Installer:** Lokasi file `.exe` setup baru di root folder.
 3. **Status Binary Running:** Konfirmasi bahwa binary yang sedang jalan di system tray sudah diperbarui.
 4. **Instruksi Git Push:** Berikan perintah `git push origin main` (dan git tag jika diperlukan) agar pengguna dapat mengeksekusinya jika siap.
+
