@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use parking_lot::RwLock;
 use tantivy::collector::TopDocs;
-use tantivy::query::{BooleanQuery, FuzzyTermQuery, Occur, Query, QueryParser, TermQuery};
+use tantivy::query::{BooleanQuery, Occur, Query, TermQuery, RegexQuery};
 use tantivy::schema::*;
 use tantivy::{doc, Index, IndexReader, IndexWriter, ReloadPolicy, Term};
 use crate::types::{FileItem, SearchQuery, SearchResult};
@@ -122,26 +122,15 @@ impl SearchEngine {
         if !parsed.keywords.is_empty() {
             for kw in &parsed.keywords {
                 let clean_kw = kw.to_lowercase();
-                let escaped = escape_tantivy_query(&clean_kw);
+                let escaped_re = escape_regex(&clean_kw);
+                let pattern = format!(".*{}.*", escaped_re);
 
-                let mut query_parser = QueryParser::for_index(&self.index, vec![self.f_filename]);
-                query_parser.set_conjunction_by_default();
-
-                let wildcard_str = if !escaped.contains('*') && !escaped.contains('?') {
-                    format!("{}*", escaped)
-                } else {
-                    escaped.clone()
-                };
-
-                let parsed_q: Box<dyn Query> = match query_parser.parse_query(&wildcard_str) {
-                    Ok(query) => query,
-                    Err(_) => match query_parser.parse_query(&escaped) {
-                        Ok(q) => q,
-                        Err(_) => {
-                            let term = Term::from_field_text(self.f_filename, &clean_kw);
-                            Box::new(FuzzyTermQuery::new(term, 1, true))
-                        }
-                    },
+                let parsed_q: Box<dyn Query> = match RegexQuery::from_pattern(&pattern, self.f_filename) {
+                    Ok(rq) => Box::new(rq),
+                    Err(_) => {
+                        let term = Term::from_field_text(self.f_filename, &clean_kw);
+                        Box::new(TermQuery::new(term, IndexRecordOption::Basic))
+                    }
                 };
 
                 subqueries.push((Occur::Must, parsed_q));
@@ -278,11 +267,11 @@ impl SearchEngine {
     }
 }
 
-fn escape_tantivy_query(input: &str) -> String {
+fn escape_regex(input: &str) -> String {
     let mut escaped = String::with_capacity(input.len() * 2);
     for c in input.chars() {
         match c {
-            '+' | '-' | '&' | '|' | '!' | '(' | ')' | '{' | '}' | '[' | ']' | '^' | '"' | '~' | ':' | '\\' | '/' => {
+            '\\' | '.' | '+' | '*' | '?' | '(' | ')' | '|' | '[' | ']' | '{' | '}' | '^' | '$' => {
                 escaped.push('\\');
                 escaped.push(c);
             }

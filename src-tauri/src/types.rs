@@ -80,6 +80,20 @@ pub fn parse_search_query_text(input: &str) -> ParsedQuery {
             parsed.extension = Some(token_lower.trim_start_matches('.').to_string());
         } else if token_lower.len() == 2 && token_lower.ends_with(':') && token_lower.chars().next().unwrap().is_ascii_alphabetic() {
             parsed.drive = Some(token.to_uppercase());
+        } else if token_lower.contains('.') && !token_lower.starts_with('.') && !token_lower.ends_with('.') && !token_lower.contains('/') && !token_lower.contains('\\') {
+            let parts: Vec<&str> = token_lower.split('.').collect();
+            if parts.len() == 2 && !parts[0].is_empty() && !parts[1].is_empty() {
+                parsed.keywords.push(parts[0].to_string());
+                if parsed.extension.is_none() {
+                    parsed.extension = Some(parts[1].to_string());
+                }
+            } else {
+                for p in parts {
+                    if !p.is_empty() {
+                        parsed.keywords.push(p.to_string());
+                    }
+                }
+            }
         } else {
             parsed.keywords.push(token.to_string());
         }
