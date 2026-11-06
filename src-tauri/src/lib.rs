@@ -20,55 +20,42 @@ use watcher::FileWatcher;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let db = Database::new().expect("Failed to initialize SQLite database");
-    let search = SearchEngine::new().expect("Failed to initialize Tantivy search engine");
-    let indexer = Arc::new(Indexer::new(db.clone(), search.clone()));
-
-    // Start background filesystem watcher
-    let _ = FileWatcher::start(db.clone(), search.clone());
-
-    let state = AppState {
-        db: db.clone(),
-        search: search.clone(),
-        indexer: indexer.clone(),
-        thumbnails: thumbnail::ThumbnailCache::new(),
-    };
+    let last_shown = Arc::new(parking_lot::Mutex::new(std::time::Instant::now()));
+    let last_shown_single = last_shown.clone();
+    let last_shown_evt = last_shown.clone();
+    let last_shown_toggle = last_shown.clone();
+    let last_shown_tray = last_shown.clone();
+    let last_shown_setup = last_shown.clone();
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
-        .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+        // 1. Single Instance plugin MUST be registered FIRST so secondary instances forward args & exit before touching Tantivy
+        .plugin(tauri_plugin_single_instance::init(move |app, args, _cwd| {
             if let Some(window) = app.get_webview_window("main") {
-                let _ = window.unminimize();
-                let _ = window.show();
-                let _ = window.set_focus();
-                position_spotlight(&window);
+                *last_shown_single.lock() = std::time::Instant::now();
+                show_and_focus(&window);
 
-                #[cfg(target_os = "windows")]
-                {
-                    use windows::Win32::UI::WindowsAndMessaging::{SetForegroundWindow, BringWindowToTop, ShowWindow, SW_RESTORE};
-                    use windows::Win32::Foundation::HWND;
-                    if let Ok(hwnd) = window.hwnd() {
-                        unsafe {
-                            let _ = ShowWindow(HWND(hwnd.0 as _), SW_RESTORE);
-                            let _ = SetForegroundWindow(HWND(hwnd.0 as _));
-                            let _ = BringWindowToTop(HWND(hwnd.0 as _));
-                        }
-                    }
-                }
+                // Find directory path passed from Windows Explorer context menu
+                let target_path = args.iter().skip(1).find(|arg| !arg.starts_with('-')).map(|arg| {
+                    arg.trim().trim_matches('"').trim().to_string()
+                });
 
-                // Check if a path argument was passed
-                let target_path = args.iter().skip(1).find(|arg| !arg.starts_with('-')).cloned();
                 if let Some(folder_path) = target_path {
-                    let _ = window.emit("open-folder-filter", folder_path);
+                    if !folder_path.is_empty() {
+                        let _ = window.emit("open-folder-filter", folder_path);
+                    } else {
+                        let _ = window.emit("focus-search", ());
+                        let _ = window.emit("window-shown", ());
+                    }
                 } else {
                     let _ = window.emit("focus-search", ());
                     let _ = window.emit("window-shown", ());
                 }
             }
         }))
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--autostart"]),
@@ -78,18 +65,20 @@ pub fn run() {
                 .with_handler(move |app, _shortcut, event| {
                     if event.state() == ShortcutState::Pressed {
                         if let Some(window) = app.get_webview_window("main") {
-                            toggle_window(&window);
+                            toggle_window(&window, &last_shown_toggle);
                         }
                     }
                 })
                 .build(),
         )
-        .manage(state)
         // Auto-hide the spotlight window when the user clicks outside it (window loses focus)
-        .on_window_event(|window, event| {
+        // Add a 400ms grace period after showing so window handover doesn't instantly close it
+        .on_window_event(move |window, event| {
             if let tauri::WindowEvent::Focused(false) = event {
                 if window.label() == "main" {
-                    let _ = window.hide();
+                    if last_shown_evt.lock().elapsed() > std::time::Duration::from_millis(400) {
+                        let _ = window.hide();
+                    }
                 }
             }
         })
@@ -111,6 +100,22 @@ pub fn run() {
             commands::set_indexed_drives,
         ])
         .setup(move |app| {
+            // Initialize Database, Tantivy, Indexer and Watcher here (ONLY executed by primary instance!)
+            let db = Database::new().expect("Failed to initialize SQLite database");
+            let search = SearchEngine::new().expect("Failed to initialize Tantivy search engine");
+            let indexer = Arc::new(Indexer::new(db.clone(), search.clone()));
+
+            // Start background filesystem watcher
+            let _ = FileWatcher::start(db.clone(), search.clone());
+
+            let state = AppState {
+                db: db.clone(),
+                search: search.clone(),
+                indexer: indexer.clone(),
+                thumbnails: thumbnail::ThumbnailCache::new(),
+            };
+            app.manage(state);
+
             // Register primary shortcut: Ctrl+Alt+S (requested) and Alt+Space
             for s in ["Ctrl+Alt+S", "Alt+Space", "Ctrl+Space"] {
                 match s.parse::<Shortcut>() {
@@ -130,15 +135,16 @@ pub fn run() {
             let quit_item = MenuItem::with_id(app, "quit", "Keluar", true, None::<&str>)?;
             let tray_menu = Menu::with_items(app, &[&show_item, &hide_item, &quit_item])?;
 
+            let last_shown_tray_clone = last_shown_tray.clone();
             let mut tray_builder = TrayIconBuilder::new()
                 .menu(&tray_menu)
                 .show_menu_on_left_click(false)
                 .tooltip("Nexora Finder (Ctrl+Alt+S)")
-                .on_menu_event(|app, event| {
+                .on_menu_event(move |app, event| {
                     match event.id.as_ref() {
                         "show" => {
                             if let Some(window) = app.get_webview_window("main") {
-                                toggle_window(&window);
+                                toggle_window(&window, &last_shown_tray_clone);
                             }
                         }
                         "hide" => {
@@ -152,11 +158,11 @@ pub fn run() {
                         _ => {}
                     }
                 })
-                .on_tray_icon_event(|tray, event| {
+                .on_tray_icon_event(move |tray, event| {
                     if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
                         let app = tray.app_handle();
                         if let Some(window) = app.get_webview_window("main") {
-                            toggle_window(&window);
+                            toggle_window(&window, &last_shown_tray);
                         }
                     }
                 });
@@ -172,17 +178,20 @@ pub fn run() {
 
             // Check if app was started directly with a directory path
             let cli_args: Vec<String> = std::env::args().collect();
-            let initial_folder = cli_args.iter().skip(1).find(|arg| !arg.starts_with('-')).cloned();
+            let initial_folder = cli_args.iter().skip(1).find(|arg| !arg.starts_with('-')).map(|arg| {
+                arg.trim().trim_matches('"').trim().to_string()
+            });
+
             if let (Some(folder_path), Some(window)) = (initial_folder, app.get_webview_window("main")) {
-                let _ = window.unminimize();
-                let _ = window.show();
-                let _ = window.set_focus();
-                position_spotlight(&window);
-                let w = window.clone();
-                tauri::async_runtime::spawn(async move {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-                    let _ = w.emit("open-folder-filter", folder_path);
-                });
+                if !folder_path.is_empty() {
+                    *last_shown_setup.lock() = std::time::Instant::now();
+                    show_and_focus(&window);
+                    let w = window.clone();
+                    tauri::async_runtime::spawn(async move {
+                        tokio::time::sleep(tokio::time::Duration::from_millis(600)).await;
+                        let _ = w.emit("open-folder-filter", folder_path);
+                    });
+                }
             }
 
             // If indexing never completed or index is empty, initiate background indexing
@@ -219,31 +228,60 @@ fn position_spotlight(window: &tauri::WebviewWindow) {
     }
 }
 
-fn toggle_window(window: &tauri::WebviewWindow) {
+#[cfg(target_os = "windows")]
+#[link(name = "user32")]
+extern "system" {
+    fn AttachThreadInput(id_attach: u32, id_attach_to: u32, f_attach: i32) -> i32;
+}
+
+fn show_and_focus(window: &tauri::WebviewWindow) {
+    let _ = window.unminimize();
+    let _ = window.show();
+    position_spotlight(window);
+    let _ = window.set_focus();
+
+    #[cfg(target_os = "windows")]
+    {
+        use windows::Win32::UI::WindowsAndMessaging::{
+            SetForegroundWindow, BringWindowToTop, ShowWindow, SW_RESTORE,
+            GetForegroundWindow, GetWindowThreadProcessId,
+        };
+        use windows::Win32::System::Threading::GetCurrentThreadId;
+        use windows::Win32::Foundation::HWND;
+
+        if let Ok(hwnd) = window.hwnd() {
+            unsafe {
+                let win_hwnd = HWND(hwnd.0 as _);
+                let fg_hwnd = GetForegroundWindow();
+                let mut fg_pid = 0;
+                let fg_thread = GetWindowThreadProcessId(fg_hwnd, Some(&mut fg_pid));
+                let cur_thread = GetCurrentThreadId();
+
+                if fg_thread != 0 && fg_thread != cur_thread {
+                    let _ = AttachThreadInput(cur_thread, fg_thread, 1);
+                    let _ = ShowWindow(win_hwnd, SW_RESTORE);
+                    let _ = SetForegroundWindow(win_hwnd);
+                    let _ = BringWindowToTop(win_hwnd);
+                    let _ = AttachThreadInput(cur_thread, fg_thread, 0);
+                } else {
+                    let _ = ShowWindow(win_hwnd, SW_RESTORE);
+                    let _ = SetForegroundWindow(win_hwnd);
+                    let _ = BringWindowToTop(win_hwnd);
+                }
+            }
+        }
+    }
+}
+
+fn toggle_window(window: &tauri::WebviewWindow, last_shown: &Arc<parking_lot::Mutex<std::time::Instant>>) {
     let is_visible = window.is_visible().unwrap_or(false);
     let is_focused = window.is_focused().unwrap_or(false);
 
     if is_visible && is_focused {
         let _ = window.hide();
     } else {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-        position_spotlight(window);
-
-        #[cfg(target_os = "windows")]
-        {
-            use windows::Win32::UI::WindowsAndMessaging::{SetForegroundWindow, BringWindowToTop, ShowWindow, SW_RESTORE};
-            use windows::Win32::Foundation::HWND;
-            if let Ok(hwnd) = window.hwnd() {
-                unsafe {
-                    let _ = ShowWindow(HWND(hwnd.0 as _), SW_RESTORE);
-                    let _ = SetForegroundWindow(HWND(hwnd.0 as _));
-                    let _ = BringWindowToTop(HWND(hwnd.0 as _));
-                }
-            }
-        }
-
+        *last_shown.lock() = std::time::Instant::now();
+        show_and_focus(window);
         let _ = window.emit("focus-search", ());
         let _ = window.emit("window-shown", ());
     }
@@ -256,12 +294,13 @@ fn register_explorer_context_menu() {
             let exe_str = exe_path.to_string_lossy().to_string();
             let icon_str = format!("{},0", exe_str);
             let command_str = format!("\"{}\" \"%1\"", exe_str);
-            let bg_command_str = format!("\"{}\"", exe_str);
+            let bg_command_str = format!("\"{}\" \"%V\"", exe_str);
 
             let targets = [
                 ("Software\\Classes\\Directory\\shell\\NexoraFinder", &command_str),
                 ("Software\\Classes\\Directory\\Background\\shell\\NexoraFinder", &bg_command_str),
                 ("Software\\Classes\\Drive\\shell\\NexoraFinder", &command_str),
+                ("Software\\Classes\\Folder\\shell\\NexoraFinder", &command_str),
             ];
 
             for (sub_key, cmd) in targets {
@@ -277,4 +316,3 @@ fn register_explorer_context_menu() {
         }
     }
 }
-

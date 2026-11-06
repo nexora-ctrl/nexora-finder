@@ -185,6 +185,18 @@ impl Database {
             }
         }
 
+        // 4. Match locked folder scope
+        if let Some(folder) = &q.folder {
+            let norm_folder = folder.replace('/', "\\");
+            let pattern = if norm_folder.ends_with('\\') {
+                format!("{}%", norm_folder)
+            } else {
+                format!("{}\\%", norm_folder)
+            };
+            sql.push_str(" AND path LIKE ?");
+            params_vec.push(rusqlite::types::Value::Text(pattern));
+        }
+
         if let Some(cat) = &q.category {
             let cat_lower = cat.to_lowercase();
             if cat_lower == "folder" {

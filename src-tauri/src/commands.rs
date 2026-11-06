@@ -22,6 +22,60 @@ pub async fn search_files(
 ) -> Result<SearchResult, String> {
     let start_time = std::time::Instant::now();
 
+    // If folder scope is locked, prioritize SQLite direct search or filesystem reading for 100% accuracy
+    if let Some(folder_path) = &query.folder {
+        let mut db_items = state.db.search(&query).unwrap_or_default();
+
+        // If database search has no items, read directly from disk folder
+        if db_items.is_empty() {
+            let path_obj = std::path::Path::new(folder_path);
+            if path_obj.is_dir() {
+                if let Ok(entries) = std::fs::read_dir(path_obj) {
+                    let kw = query.query.trim().to_lowercase();
+                    for entry in entries.flatten() {
+                        let fname = entry.file_name().to_string_lossy().to_string();
+                        if !kw.is_empty() && !fname.to_lowercase().contains(&kw) {
+                            continue;
+                        }
+                        let p = entry.path().to_string_lossy().to_string();
+                        let is_dir = entry.file_type().map(|t| t.is_dir()).unwrap_or(false);
+                        let ext = if is_dir {
+                            "".to_string()
+                        } else {
+                            entry.path().extension().map(|e| e.to_string_lossy().to_string()).unwrap_or_default()
+                        };
+                        let meta = entry.metadata().ok();
+                        let size = meta.as_ref().map(|m| m.len()).unwrap_or(0);
+                        let mod_time = meta
+                            .and_then(|m| m.modified().ok())
+                            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                            .map(|d| d.as_secs() as i64)
+                            .unwrap_or(0);
+                        let drive = folder_path.chars().next().unwrap_or('C').to_string();
+
+                        db_items.push(FileItem {
+                            id: None,
+                            path: p,
+                            filename: fname,
+                            extension: ext,
+                            size_bytes: size,
+                            modified_at: mod_time,
+                            is_directory: is_dir,
+                            drive,
+                        });
+                    }
+                }
+            }
+        }
+
+        let total = db_items.len();
+        return Ok(SearchResult {
+            items: db_items,
+            total_matched: total,
+            elapsed_ms: start_time.elapsed().as_secs_f64() * 1000.0,
+        });
+    }
+
     let mut tantivy_res = state.search.search(&query).unwrap_or_else(|_| SearchResult {
         items: Vec::new(),
         total_matched: 0,
@@ -39,21 +93,6 @@ pub async fn search_files(
             tantivy_res.items.retain(|item| enabled_set.contains(&item.drive.to_uppercase()));
             tantivy_res.total_matched = tantivy_res.items.len();
         }
-    }
-
-    // Filter by locked folder scope if specified
-    if let Some(folder_prefix) = &query.folder {
-        let norm_prefix = folder_prefix.replace('/', "\\").to_lowercase();
-        let target_prefix = if norm_prefix.ends_with('\\') {
-            norm_prefix
-        } else {
-            format!("{}\\", norm_prefix)
-        };
-        tantivy_res.items.retain(|item| {
-            let item_path = item.path.replace('/', "\\").to_lowercase();
-            item_path.starts_with(&target_prefix)
-        });
-        tantivy_res.total_matched = tantivy_res.items.len();
     }
 
     tantivy_res.elapsed_ms = start_time.elapsed().as_secs_f64() * 1000.0;
