@@ -16,6 +16,10 @@ import { PreviewPane } from "./components/PreviewPane";
 import { StatusBar } from "./components/StatusBar";
 import { SettingsModal } from "./components/SettingsModal";
 import { ContextMenu } from "./components/ContextMenu";
+import { UpdateModal } from "./components/UpdateModal";
+import { check } from "@tauri-apps/plugin-updater";
+import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
+import { relaunch } from "@tauri-apps/plugin-process";
 import "./App.css";
 
 export function App() {
@@ -38,6 +42,12 @@ export function App() {
     const saved = localStorage.getItem("nexora_theme");
     return saved === "light" ? "light" : "dark";
   });
+  const [updateAvailable, setUpdateAvailable] = useState<{
+    version: string;
+    body?: string;
+    updaterObj: any;
+  } | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleToggleViewMode = () => {
     setViewMode((prev) => {
@@ -82,6 +92,38 @@ export function App() {
       })
       .catch((err) => console.error("Failed to load recent files:", err));
 
+    // Check for updates in background
+    const checkForUpdates = async () => {
+      try {
+        const update = await check();
+        if (update?.available) {
+          setUpdateAvailable({
+            version: update.version,
+            body: update.body,
+            updaterObj: update,
+          });
+
+          // Show native Windows tray notification
+          let hasPermission = await isPermissionGranted();
+          if (!hasPermission) {
+            const permission = await requestPermission();
+            hasPermission = permission === "granted";
+          }
+          if (hasPermission) {
+            sendNotification({
+              title: "Nexora Finder • Pembaruan Tersedia",
+              body: `Versi v${update.version} telah rilis! Klik untuk memperbarui otomatis.`,
+            });
+          }
+        }
+      } catch (err) {
+        console.info("Update check skipped/failed:", err);
+      }
+    };
+
+    const updateTimer = setTimeout(checkForUpdates, 3000);
+    const intervalTimer = setInterval(checkForUpdates, 4 * 60 * 60 * 1000);
+
     // Listen to indexing updates from Rust backend
     const unlistenStatusPromise = listen<IndexingStatus>("indexing-status", (event) => {
       setIndexingStatus(event.payload);
@@ -109,6 +151,8 @@ export function App() {
     window.addEventListener("keydown", handleGlobalWindowKeyDown);
 
     return () => {
+      clearTimeout(updateTimer);
+      clearInterval(intervalTimer);
       unlistenStatusPromise.then((unlisten) => unlisten());
       unlistenFocusPromise.then((unlisten) => unlisten());
       window.removeEventListener("keydown", handleGlobalWindowKeyDown);
@@ -389,6 +433,27 @@ export function App() {
           onCopyPath={handleCopyPath}
         />
       )}
+
+      <UpdateModal
+        isOpen={Boolean(updateAvailable)}
+        version={updateAvailable?.version ?? ""}
+        body={updateAvailable?.body}
+        isUpdating={isUpdating}
+        onClose={() => setUpdateAvailable(null)}
+        onUpdate={async () => {
+          if (!updateAvailable?.updaterObj) return;
+          try {
+            setIsUpdating(true);
+            await updateAvailable.updaterObj.downloadAndInstall();
+            await relaunch();
+          } catch (err) {
+            console.error("Gagal update:", err);
+            alert("Gagal memasang update: " + String(err));
+          } finally {
+            setIsUpdating(false);
+          }
+        }}
+      />
     </div>
   );
 }
