@@ -1510,7 +1510,7 @@ html, body, #root {
    ========================================================================== */
 .thumbnail-grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
   gap: 12px;
   padding: 14px;
   overflow-y: auto;
@@ -1521,10 +1521,10 @@ html, body, #root {
 .thumbnail-card {
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 8px;
+  border-radius: 12px;
+  padding: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
@@ -1532,22 +1532,22 @@ html, body, #root {
 }
 
 .thumbnail-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
 }
 
 .thumbnail-card.selected {
-  background: rgba(6, 182, 212, 0.12);
-  border-color: rgba(6, 182, 212, 0.55);
-  box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+  background: rgba(6, 182, 212, 0.14);
+  border-color: rgba(6, 182, 212, 0.6);
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.28);
 }
 
 .thumb-preview-box {
   position: relative;
   width: 100%;
-  height: 96px;
-  background: rgba(0, 0, 0, 0.25);
+  aspect-ratio: 1 / 1;
+  background: rgba(0, 0, 0, 0.35);
   border-radius: 8px;
   overflow: hidden;
   display: flex;
@@ -1558,12 +1558,13 @@ html, body, #root {
 .thumb-image-preview {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  display: block;
   transition: transform 0.2s ease;
 }
 
 .thumbnail-card:hover .thumb-image-preview {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
 .thumb-fallback-icon {
@@ -1575,27 +1576,27 @@ html, body, #root {
 
 .thumb-ext-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 5px;
+  right: 5px;
   font-size: 8.5px;
   font-weight: 700;
-  padding: 1px 4px;
+  padding: 1.5px 5px;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
   text-transform: uppercase;
 }
 
 .thumb-info-box {
   display: flex;
   flex-direction: column;
-  margin-top: 8px;
+  padding: 6px 2px 2px 2px;
   gap: 2px;
 }
 
 .thumb-filename {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-primary);
   white-space: nowrap;
@@ -1622,24 +1623,24 @@ html, body, #root {
 }
 
 .spotlight-window.theme-light .thumbnail-card {
-  background: rgba(255, 255, 255, 0.65);
-  border-color: rgba(147, 197, 253, 0.6);
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(147, 197, 253, 0.7);
 }
 
 .spotlight-window.theme-light .thumbnail-card:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(59, 130, 246, 0.6);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.12);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
 }
 
 .spotlight-window.theme-light .thumbnail-card.selected {
   background: #e0f2fe;
   border-color: #0284c7;
-  box-shadow: 0 0 10px rgba(2, 132, 199, 0.3);
+  box-shadow: 0 0 12px rgba(2, 132, 199, 0.35);
 }
 
 .spotlight-window.theme-light .thumb-preview-box {
-  background: #f1f5f9;
+  background: #e2e8f0;
 }
 
 .spotlight-window.theme-light .thumb-filename {

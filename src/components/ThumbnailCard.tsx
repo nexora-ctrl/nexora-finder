@@ -32,8 +32,8 @@ export const ThumbnailCard: React.FC<ThumbnailItemProps> = ({
       return;
     }
 
-    // Request Windows thumbnail
-    invoke<string>("get_thumbnail", { path: item.path, size: 180 })
+    // Request thumbnail with higher resolution (240px)
+    invoke<string>("get_thumbnail", { path: item.path, size: 240 })
       .then((dataUri) => {
         if (isMounted && dataUri) {
           thumbnailDataCache.set(item.path, dataUri);
