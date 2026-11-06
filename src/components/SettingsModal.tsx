@@ -145,7 +145,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="settings-header">
           <div className="settings-title-group">
             <SlidersHorizontal size={18} className="text-cyan-400" />
-            <h2 className="settings-title">Pengaturan Nexora Search</h2>
+            <h2 className="settings-title">Pengaturan Nexora Finder</h2>
           </div>
           <button
             type="button"
@@ -376,7 +376,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="settings-footer">
-          <span className="version-tag">Nexora Search • Standalone Edition v1.0.0</span>
+          <span className="version-tag">Nexora Finder • Standalone Edition v1.0.0</span>
           {savedNotice && (
             <span className="saved-notice">
               <Check size={12} className="text-emerald-400" /> Tersimpan

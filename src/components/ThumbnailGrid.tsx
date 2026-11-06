@@ -8,6 +8,7 @@ interface ThumbnailGridProps {
   selectedIndex: number;
   onSelect: (index: number) => void;
   onOpen: (item: FileItem) => void;
+  onContextMenu?: (item: FileItem, e: React.MouseEvent) => void;
   query: string;
   isLoading: boolean;
 }
@@ -17,6 +18,7 @@ export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({
   selectedIndex,
   onSelect,
   onOpen,
+  onContextMenu,
   query,
   isLoading,
 }) => {
@@ -63,7 +65,7 @@ export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({
     return (
       <div className="results-empty-state">
         <Clock size={36} className="text-slate-600 mb-2" />
-        <p className="empty-title">Nexora Search Spotlight Edition</p>
+        <p className="empty-title">Nexora Finder Spotlight Edition</p>
         <p className="empty-subtitle">
           Ketik nama file atau gambar untuk melihat thumbnail secara cepat.
         </p>
@@ -80,6 +82,7 @@ export const ThumbnailGrid: React.FC<ThumbnailGridProps> = ({
           isSelected={index === selectedIndex}
           onSelect={() => onSelect(index)}
           onOpen={() => onOpen(item)}
+          onContextMenu={(e) => onContextMenu?.(item, e)}
         />
       ))}
     </div>

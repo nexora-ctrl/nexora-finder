@@ -65,6 +65,7 @@ pub fn run() {
             commands::get_indexing_status,
             commands::start_indexing,
             commands::open_item,
+            commands::open_item_with,
             commands::reveal_item,
             commands::get_thumbnail,
             commands::get_recent_files,
@@ -91,7 +92,7 @@ pub fn run() {
             }
 
             // Create System Tray
-            let show_item = MenuItem::with_id(app, "show", "Buka Nexora Search (Ctrl+Alt+S)", true, None::<&str>)?;
+            let show_item = MenuItem::with_id(app, "show", "Buka Nexora Finder (Ctrl+Alt+S)", true, None::<&str>)?;
             let hide_item = MenuItem::with_id(app, "hide", "Sembunyikan ke Tray", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Keluar", true, None::<&str>)?;
             let tray_menu = Menu::with_items(app, &[&show_item, &hide_item, &quit_item])?;
@@ -99,7 +100,7 @@ pub fn run() {
             let mut tray_builder = TrayIconBuilder::new()
                 .menu(&tray_menu)
                 .show_menu_on_left_click(false)
-                .tooltip("Nexora Search (Ctrl+Alt+S)")
+                .tooltip("Nexora Finder (Ctrl+Alt+S)")
                 .on_menu_event(|app, event| {
                     match event.id.as_ref() {
                         "show" => {

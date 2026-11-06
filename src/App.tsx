@@ -15,6 +15,7 @@ import { ThumbnailGrid } from "./components/ThumbnailGrid";
 import { PreviewPane } from "./components/PreviewPane";
 import { StatusBar } from "./components/StatusBar";
 import { SettingsModal } from "./components/SettingsModal";
+import { ContextMenu } from "./components/ContextMenu";
 import "./App.css";
 
 export function App() {
@@ -187,6 +188,12 @@ export function App() {
     };
   }, [query, activeCategory, activeDrive, performSearch]);
 
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    item: FileItem;
+  } | null>(null);
+
   const handleOpenItem = async (item: FileItem) => {
     try {
       await invoke("open_item", { path: item.path });
@@ -194,6 +201,16 @@ export function App() {
       invoke("hide_window").catch((err) => console.error(err));
     } catch (err) {
       console.error("Failed to open item:", err);
+    }
+  };
+
+  const handleOpenItemWith = async (item: FileItem) => {
+    try {
+      await invoke("open_item_with", { path: item.path });
+      // Auto minimize / hide window after opening Open With dialog
+      invoke("hide_window").catch((err) => console.error(err));
+    } catch (err) {
+      console.error("Failed to open with:", err);
     }
   };
 
@@ -317,6 +334,9 @@ export function App() {
                 selectedIndex={selectedIndex}
                 onSelect={setSelectedIndex}
                 onOpen={handleOpenItem}
+                onContextMenu={(item, e) => {
+                  setContextMenu({ x: e.clientX, y: e.clientY, item });
+                }}
                 query={query}
                 isLoading={isLoading}
               />
@@ -326,6 +346,9 @@ export function App() {
                 selectedIndex={selectedIndex}
                 onSelect={setSelectedIndex}
                 onOpen={handleOpenItem}
+                onContextMenu={(item, e) => {
+                  setContextMenu({ x: e.clientX, y: e.clientY, item });
+                }}
                 query={query}
                 isLoading={isLoading}
               />
@@ -353,6 +376,19 @@ export function App() {
         theme={theme}
         onThemeChange={handleThemeChange}
       />
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          item={contextMenu.item}
+          onClose={() => setContextMenu(null)}
+          onOpen={handleOpenItem}
+          onOpenWith={handleOpenItemWith}
+          onReveal={handleRevealItem}
+          onCopyPath={handleCopyPath}
+        />
+      )}
     </div>
   );
 }

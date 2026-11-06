@@ -9,6 +9,7 @@ interface ThumbnailItemProps {
   isSelected: boolean;
   onSelect: () => void;
   onOpen: () => void;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 // Global cache for thumbnail Data URLs in browser memory to eliminate refetch flickering
@@ -19,6 +20,7 @@ export const ThumbnailCard: React.FC<ThumbnailItemProps> = ({
   isSelected,
   onSelect,
   onOpen,
+  onContextMenu,
 }) => {
   const [thumbUrl, setThumbUrl] = useState<string | null>(
     thumbnailDataCache.get(item.path) || null
@@ -56,6 +58,11 @@ export const ThumbnailCard: React.FC<ThumbnailItemProps> = ({
       className={`thumbnail-card ${isSelected ? "selected" : ""}`}
       onClick={onSelect}
       onDoubleClick={onOpen}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onSelect();
+        onContextMenu?.(e);
+      }}
       title={item.path}
     >
       <div className="thumb-preview-box">

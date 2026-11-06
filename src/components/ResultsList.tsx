@@ -9,6 +9,7 @@ interface ResultsListProps {
   selectedIndex: number;
   onSelect: (index: number) => void;
   onOpen: (item: FileItem) => void;
+  onContextMenu?: (item: FileItem, e: React.MouseEvent) => void;
   query: string;
   isLoading: boolean;
 }
@@ -18,6 +19,7 @@ export const ResultsList: React.FC<ResultsListProps> = ({
   selectedIndex,
   onSelect,
   onOpen,
+  onContextMenu,
   query,
   isLoading,
 }) => {
@@ -64,7 +66,7 @@ export const ResultsList: React.FC<ResultsListProps> = ({
     return (
       <div className="results-empty-state">
         <Clock size={36} className="text-slate-600 mb-2" />
-        <p className="empty-title">Nexora Search Spotlight Edition</p>
+        <p className="empty-title">Nexora Finder Spotlight Edition</p>
         <p className="empty-subtitle">
           Ketik nama file, ekstensi, atau kata kunci untuk mencari secara instan.
         </p>
@@ -82,6 +84,11 @@ export const ResultsList: React.FC<ResultsListProps> = ({
             className={`result-row ${isSelected ? "selected" : ""}`}
             onClick={() => onSelect(index)}
             onDoubleClick={() => onOpen(item)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              onSelect(index);
+              onContextMenu?.(item, e);
+            }}
           >
             <div className="result-icon-cell">
               <FileIcon

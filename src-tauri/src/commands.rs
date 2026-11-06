@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
-use crate::actions::{open_file, reveal_in_explorer};
+use crate::actions::{open_file, open_file_with, reveal_in_explorer};
 use crate::db::Database;
 use crate::drive::get_available_drives;
 use crate::indexer::Indexer;
@@ -59,6 +59,11 @@ pub async fn start_indexing(app: AppHandle, state: State<'_, AppState>) -> Resul
 #[tauri::command]
 pub async fn open_item(path: String) -> Result<(), String> {
     open_file(&path)
+}
+
+#[tauri::command]
+pub async fn open_item_with(path: String) -> Result<(), String> {
+    open_file_with(&path)
 }
 
 #[tauri::command]

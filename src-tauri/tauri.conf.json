@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Nexora Search",
+        "title": "Nexora Finder",
         "width": 800,
         "height": 58,
         "decorations": false,
