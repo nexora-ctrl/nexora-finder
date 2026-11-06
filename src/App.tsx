@@ -225,13 +225,26 @@ export function App() {
 
   // Keyboard navigation & Shortcuts
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const gridCols = 4; // approximate columns for thumbnail grid navigation
+    // Read the real number of rendered grid columns so Up/Down moves straight vertically
+    const getGridCols = () => {
+      const grid = document.querySelector(".thumbnail-grid-container") as HTMLElement | null;
+      if (!grid) return 1;
+      const cols = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
+      return Math.max(1, cols);
+    };
+    const gridCols = viewMode === "grid" ? getGridCols() : 1;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + (viewMode === "grid" ? gridCols : 1), results.length - 1));
+      setSelectedIndex((prev) => {
+        const last = results.length - 1;
+        const next = prev + gridCols;
+        if (next <= last) return next;
+        // Partial last row: drop to last item only if a lower row exists, otherwise stay
+        return Math.floor(prev / gridCols) < Math.floor(last / gridCols) ? last : prev;
+      });
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - (viewMode === "grid" ? gridCols : 1), 0));
+      setSelectedIndex((prev) => (prev - gridCols >= 0 ? prev - gridCols : prev));
     } else if (e.key === "ArrowRight" && viewMode === "grid") {
       e.preventDefault();
       setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));

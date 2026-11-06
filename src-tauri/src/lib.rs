@@ -52,6 +52,14 @@ pub fn run() {
                 .build(),
         )
         .manage(state)
+        // Auto-hide the spotlight window when the user clicks outside it (window loses focus)
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Focused(false) = event {
+                if window.label() == "main" {
+                    let _ = window.hide();
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             commands::search_files,
             commands::get_indexing_status,
