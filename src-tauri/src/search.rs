@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use parking_lot::RwLock;
 use tantivy::collector::TopDocs;
-use tantivy::query::{BooleanQuery, Occur, Query, TermQuery, RegexQuery};
+use tantivy::query::{BooleanQuery, Occur, Query, TermQuery, RegexQuery, FuzzyTermQuery};
 use tantivy::schema::*;
 use tantivy::{doc, Index, IndexReader, IndexWriter, ReloadPolicy, Term};
 use crate::types::{FileItem, SearchQuery, SearchResult};
@@ -114,11 +114,101 @@ impl SearchEngine {
         let limit = q.limit.unwrap_or(100).min(500);
 
         let query_str = q.query.trim();
-
-        let mut subqueries: Vec<(Occur, Box<dyn Query>)> = Vec::new();
-
         let parsed = crate::types::parse_search_query_text(query_str);
 
+        // Common filter builders
+        let build_filters = |parsed: &crate::types::ParsedQuery, q: &SearchQuery| -> Vec<(Occur, Box<dyn Query>)> {
+            let mut filters: Vec<(Occur, Box<dyn Query>)> = Vec::new();
+
+            // Apply Extension filter extracted from query (e.g. ".doc" -> doc, docx)
+            if let Some(ext) = &parsed.extension {
+                let clean_ext = ext.to_lowercase();
+                let mut ext_queries: Vec<(Occur, Box<dyn Query>)> = Vec::new();
+
+                let primary_term = Term::from_field_text(self.f_extension, &clean_ext);
+                ext_queries.push((Occur::Should, Box::new(TermQuery::new(primary_term, IndexRecordOption::Basic))));
+
+                // Common multi-letter extension variants
+                match clean_ext.as_str() {
+                    "doc" => {
+                        let t = Term::from_field_text(self.f_extension, "docx");
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
+                    }
+                    "docx" => {
+                        let t = Term::from_field_text(self.f_extension, "doc");
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
+                    }
+                    "xls" => {
+                        let t = Term::from_field_text(self.f_extension, "xlsx");
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
+                    }
+                    "xlsx" => {
+                        let t = Term::from_field_text(self.f_extension, "xls");
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
+                    }
+                    "ppt" => {
+                        let t = Term::from_field_text(self.f_extension, "pptx");
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
+                    }
+                    "pptx" => {
+                        let t = Term::from_field_text(self.f_extension, "ppt");
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
+                    }
+                    "jpg" => {
+                        let t = Term::from_field_text(self.f_extension, "jpeg");
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
+                    }
+                    "jpeg" => {
+                        let t = Term::from_field_text(self.f_extension, "jpg");
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
+                    }
+                    _ => {}
+                }
+
+                filters.push((Occur::Must, Box::new(BooleanQuery::new(ext_queries))));
+            }
+
+            // Apply Drive filter (either from parsed query "d:" or UI filter)
+            let effective_drive = parsed.drive.as_ref().or(q.drive.as_ref());
+            if let Some(drive) = effective_drive {
+                if !drive.is_empty() && drive != "ALL" {
+                    let term = Term::from_field_text(self.f_drive, drive);
+                    filters.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
+                }
+            }
+
+            // Apply Category extension filter
+            if let Some(cat) = &q.category {
+                let extensions = match cat.to_lowercase().as_str() {
+                    "document" => vec!["pdf", "doc", "docx", "txt", "xlsx", "xls", "pptx", "ppt", "csv", "md"],
+                    "image" => vec!["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "ico"],
+                    "video" => vec!["mp4", "mkv", "avi", "mov", "wmv", "webm", "flv"],
+                    "audio" => vec!["mp3", "wav", "flac", "aac", "ogg", "m4a"],
+                    "app" => vec!["exe", "msi", "bat", "cmd", "ps1", "lnk"],
+                    "archive" => vec!["zip", "rar", "7z", "tar", "gz", "iso"],
+                    "code" => vec!["rs", "ts", "tsx", "js", "jsx", "py", "html", "css", "json", "c", "cpp"],
+                    "folder" => vec![],
+                    _ => vec![],
+                };
+
+                if cat.to_lowercase() == "folder" {
+                    let term = Term::from_field_u64(self.f_is_directory, 1);
+                    filters.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
+                } else if !extensions.is_empty() {
+                    let mut ext_queries: Vec<(Occur, Box<dyn Query>)> = Vec::new();
+                    for ext in extensions {
+                        let term = Term::from_field_text(self.f_extension, ext);
+                        ext_queries.push((Occur::Should, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
+                    }
+                    filters.push((Occur::Must, Box::new(BooleanQuery::new(ext_queries))));
+                }
+            }
+
+            filters
+        };
+
+        // --- STEP 1: EXACT / PREFIX SUBSTRING SEARCH ---
+        let mut exact_subqueries: Vec<(Occur, Box<dyn Query>)> = Vec::new();
         if !parsed.keywords.is_empty() {
             for kw in &parsed.keywords {
                 let clean_kw = kw.to_lowercase();
@@ -133,103 +223,53 @@ impl SearchEngine {
                     }
                 };
 
-                subqueries.push((Occur::Must, parsed_q));
+                exact_subqueries.push((Occur::Must, parsed_q));
             }
         }
 
-        // Apply Extension filter extracted from query (e.g. ".doc" -> doc, docx)
-        if let Some(ext) = &parsed.extension {
-            let clean_ext = ext.to_lowercase();
-            let mut ext_queries: Vec<(Occur, Box<dyn Query>)> = Vec::new();
+        let mut exact_all_queries = exact_subqueries;
+        let mut filter_queries = build_filters(&parsed, q);
+        exact_all_queries.append(&mut filter_queries);
 
-            let primary_term = Term::from_field_text(self.f_extension, &clean_ext);
-            ext_queries.push((Occur::Should, Box::new(TermQuery::new(primary_term, IndexRecordOption::Basic))));
-
-            // Common multi-letter extension variants
-            match clean_ext.as_str() {
-                "doc" => {
-                    let t = Term::from_field_text(self.f_extension, "docx");
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
-                }
-                "docx" => {
-                    let t = Term::from_field_text(self.f_extension, "doc");
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
-                }
-                "xls" => {
-                    let t = Term::from_field_text(self.f_extension, "xlsx");
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
-                }
-                "xlsx" => {
-                    let t = Term::from_field_text(self.f_extension, "xls");
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
-                }
-                "ppt" => {
-                    let t = Term::from_field_text(self.f_extension, "pptx");
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
-                }
-                "pptx" => {
-                    let t = Term::from_field_text(self.f_extension, "ppt");
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
-                }
-                "jpg" => {
-                    let t = Term::from_field_text(self.f_extension, "jpeg");
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
-                }
-                "jpeg" => {
-                    let t = Term::from_field_text(self.f_extension, "jpg");
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(t, IndexRecordOption::Basic))));
-                }
-                _ => {}
-            }
-
-            subqueries.push((Occur::Must, Box::new(BooleanQuery::new(ext_queries))));
-        }
-
-        // Apply Drive filter (either from parsed query "d:" or UI filter)
-        let effective_drive = parsed.drive.as_ref().or(q.drive.as_ref());
-        if let Some(drive) = effective_drive {
-            if !drive.is_empty() && drive != "ALL" {
-                let term = Term::from_field_text(self.f_drive, drive);
-                subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
-            }
-        }
-
-        // Apply Category extension filter
-        if let Some(cat) = &q.category {
-            let extensions = match cat.to_lowercase().as_str() {
-                "document" => vec!["pdf", "doc", "docx", "txt", "xlsx", "xls", "pptx", "ppt", "csv", "md"],
-                "image" => vec!["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg", "ico"],
-                "video" => vec!["mp4", "mkv", "avi", "mov", "wmv", "webm", "flv"],
-                "audio" => vec!["mp3", "wav", "flac", "aac", "ogg", "m4a"],
-                "app" => vec!["exe", "msi", "bat", "cmd", "ps1", "lnk"],
-                "archive" => vec!["zip", "rar", "7z", "tar", "gz", "iso"],
-                "code" => vec!["rs", "ts", "tsx", "js", "jsx", "py", "html", "css", "json", "c", "cpp"],
-                "folder" => vec![],
-                _ => vec![],
-            };
-
-            if cat.to_lowercase() == "folder" {
-                // Filter is_directory == 1
-                let term = Term::from_field_u64(self.f_is_directory, 1);
-                subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
-            } else if !extensions.is_empty() {
-                let mut ext_queries: Vec<(Occur, Box<dyn Query>)> = Vec::new();
-                for ext in extensions {
-                    let term = Term::from_field_text(self.f_extension, ext);
-                    ext_queries.push((Occur::Should, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
-                }
-                subqueries.push((Occur::Must, Box::new(BooleanQuery::new(ext_queries))));
-            }
-        }
-
-        let final_query: Box<dyn Query> = if subqueries.is_empty() {
-            // Return all or recent
+        let exact_final_query: Box<dyn Query> = if exact_all_queries.is_empty() {
             Box::new(tantivy::query::AllQuery)
         } else {
-            Box::new(BooleanQuery::new(subqueries))
+            Box::new(BooleanQuery::new(exact_all_queries))
         };
 
-        let top_docs = searcher.search(&final_query, &TopDocs::with_limit(limit))?;
+        let mut top_docs = searcher.search(&exact_final_query, &TopDocs::with_limit(limit))?;
+
+        // --- STEP 2: FUZZY SEARCH FALLBACK / AUGMENTATION ---
+        // Jika hasil exact kosong atau sedikit, dan pengguna memasukkan kata kunci minimal 3 karakter
+        let has_fuzzy_kw = parsed.keywords.iter().any(|k| k.len() >= 3);
+        if top_docs.len() < 5 && has_fuzzy_kw {
+            let mut fuzzy_subqueries: Vec<(Occur, Box<dyn Query>)> = Vec::new();
+            for kw in &parsed.keywords {
+                let clean_kw = kw.to_lowercase();
+                let distance = if clean_kw.len() <= 4 { 1 } else { 2 };
+                let term = Term::from_field_text(self.f_filename, &clean_kw);
+                let fuzzy_q = FuzzyTermQuery::new(term, distance, true);
+                fuzzy_subqueries.push((Occur::Should, Box::new(fuzzy_q)));
+            }
+
+            let mut fuzzy_all_queries = vec![(Occur::Must, Box::new(BooleanQuery::new(fuzzy_subqueries)) as Box<dyn Query>)];
+            let mut fuzzy_filters = build_filters(&parsed, q);
+            fuzzy_all_queries.append(&mut fuzzy_filters);
+
+            let fuzzy_final_query: Box<dyn Query> = Box::new(BooleanQuery::new(fuzzy_all_queries));
+            if let Ok(fuzzy_top_docs) = searcher.search(&fuzzy_final_query, &TopDocs::with_limit(limit)) {
+                let mut existing_addresses: std::collections::HashSet<_> = top_docs.iter().map(|(_, addr)| *addr).collect();
+                for (score, addr) in fuzzy_top_docs {
+                    if existing_addresses.insert(addr) {
+                        top_docs.push((score, addr));
+                        if top_docs.len() >= limit {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         let total_matched = top_docs.len();
 
         let mut items = Vec::with_capacity(top_docs.len());

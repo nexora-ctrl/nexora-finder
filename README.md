@@ -31,6 +31,7 @@ Dilengkapi dengan desain antarmuka bergaya **Spotlight Glassmorphism** (Mode Ter
 ## ✨ Fitur Utama (Key Features)
 
 - ⚡ **Pencarian Super Instan (< 1 ms):** Menggunakan mesin indeks Tantivy berkecepatan tinggi yang mampu menangani jutaan file tanpa jeda.
+- 🔍 **Pencarian Cerdas Toleran Saltik (Fuzzy Search):** Tetap menemukan berkas secara akurat meskipun pengguna salah mengetik (*typo*) atau hanya mengingat sebagian nama berkas.
 - 🎯 **Mode Jendela Spotlight Adaptif:** Jendela otomatis ramping saat awal dibuka (hanya bilah pencarian), dan melebar ke tengah secara mulus saat mulai mengetik hasil pencarian.
 - 🖼️ **Dua Mode Tampilan (List & Grid View):**
   - **Mode Daftar (List View):** Informasi detail lengkap seperti jalur folder, ekstensi, ukuran file, dan tanggal modifikasi.
