@@ -376,7 +376,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="settings-footer">
-          <span className="version-tag">Nexora Finder • Beta v0.1.0</span>
+          <span className="version-tag">Nexora Finder • Beta v0.2.0</span>
           {savedNotice && (
             <span className="saved-notice">
               <Check size={12} className="text-emerald-400" /> Tersimpan
