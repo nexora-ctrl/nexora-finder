@@ -75,12 +75,17 @@ export function App() {
           });
         }
       } else if (manual) {
-        alert("Nexora Finder sudah menggunakan versi terbaru (v0.2.0-beta)!");
+        alert("Nexora Finder sudah menggunakan versi terbaru (v0.2.0-beta)!\nTidak ada pembaruan baru yang ditemukan.");
       }
-    } catch (err) {
-      console.info("Update check skipped/failed:", err);
+    } catch (err: any) {
+      console.info("Update check info:", err);
       if (manual) {
-        alert("Belum dapat terhubung ke server pembaruan GitHub. Periksa koneksi internet Anda.");
+        const errMsg = String(err?.message || err || "");
+        if (errMsg.includes("404") || errMsg.includes("status code: 404") || errMsg.includes("Could not fetch")) {
+          alert("Nexora Finder sudah dalam versi terbaru!\nBelum ada rilis baru yang dipublikasikan di repositori GitHub.");
+        } else {
+          alert("Tidak dapat memeriksa pembaruan saat ini. Pastikan komputer terhubung ke internet.");
+        }
       }
     } finally {
       if (manual) setIsCheckingUpdate(false);
