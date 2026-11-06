@@ -49,7 +49,7 @@ pub fn get_file_thumbnail(path: &str, target_size: u32) -> Result<String, String
 fn extract_image_thumbnail(path: &str, target_size: u32) -> Result<String, String> {
     // Open image directly
     let img = image::open(path).map_err(|e| format!("Failed to open image: {}", e))?;
-    let thumb = img.thumbnail(target_size, target_size);
+    let thumb = img.thumbnail_exact(target_size, target_size);
 
     let mut png_bytes = Vec::new();
     let mut cursor = Cursor::new(&mut png_bytes);
