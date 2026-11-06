@@ -125,8 +125,8 @@ html, body, #root {
   background: transparent;
   border: none;
   outline: none;
-  font-size: 15.5px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 450;
   color: var(--text-primary);
   letter-spacing: -0.01em;
 }
@@ -144,7 +144,7 @@ html, body, #root {
 
 .search-stats-badge {
   font-size: 10.5px;
-  font-weight: 500;
+  font-weight: 450;
   padding: 3px 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
@@ -337,7 +337,7 @@ html, body, #root {
 
 .result-filename {
   font-size: 12.5px;
-  font-weight: 500;
+  font-weight: 450;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -346,8 +346,8 @@ html, body, #root {
 }
 
 .result-ext-badge {
-  font-size: 9px;
-  font-weight: 600;
+  font-size: 8.5px;
+  font-weight: 500;
   padding: 1px 4px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.06);
@@ -362,6 +362,7 @@ html, body, #root {
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.25;
+  font-weight: 400;
 }
 
 .result-meta-cell {
@@ -381,6 +382,7 @@ html, body, #root {
 .result-date {
   font-size: 10px;
   color: #728296;
+  font-weight: 400;
 }
 
 /* ==========================================================================
@@ -1109,7 +1111,7 @@ html, body, #root {
 
 .spotlight-window.theme-light .search-input {
   color: #0f172a !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
 }
 
 .spotlight-window.theme-light .search-input::placeholder {
@@ -1129,7 +1131,7 @@ html, body, #root {
   background: rgba(37, 99, 235, 0.08) !important;
   border: 1px solid rgba(147, 197, 253, 0.8) !important;
   color: #1d4ed8 !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
 }
 
 .spotlight-window.theme-light .settings-btn {
@@ -1237,24 +1239,24 @@ html, body, #root {
 
 .spotlight-window.theme-light .result-filename {
   color: #0f172a !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
 }
 
 .spotlight-window.theme-light .result-path-row {
   color: #475569 !important;
-  font-weight: 450 !important;
+  font-weight: 400 !important;
 }
 
 .spotlight-window.theme-light .result-ext-badge {
   background: rgba(37, 99, 235, 0.09) !important;
   color: #1d4ed8 !important;
   border: 1px solid rgba(147, 197, 253, 0.7) !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
 }
 
 .spotlight-window.theme-light .result-size {
   color: #1e293b !important;
-  font-weight: 500 !important;
+  font-weight: 450 !important;
 }
 
 .spotlight-window.theme-light .result-date {
