@@ -1,0 +1,48 @@
+[package]
+name = "nexora-finder"
+version = "0.1.0"
+description = "Nexora Search - Instant File Finder for Windows"
+authors = ["Nexora Team"]
+edition = "2021"
+
+[lib]
+name = "nexora_finder_lib"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-autostart = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tantivy = { version = "0.22", default-features = false, features = ["mmap", "lz4-compression", "stopwords"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+tokio = { version = "1", features = ["full"] }
+jwalk = "0.8"
+notify = "6.1"
+parking_lot = "0.12"
+crossbeam-channel = "0.5"
+directories = "6.0"
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Ioctl",
+    "Win32_System_IO",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_Threading",
+    "Win32_Security"
+] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
