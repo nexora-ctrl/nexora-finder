@@ -3,6 +3,7 @@ mod commands;
 mod db;
 mod drive;
 mod indexer;
+mod ipc;
 mod search;
 mod thumbnail;
 mod types;
@@ -18,40 +19,28 @@ use indexer::Indexer;
 use search::SearchEngine;
 use watcher::FileWatcher;
 
+#[cfg(target_os = "windows")]
+#[link(name = "user32")]
+extern "system" {
+    fn AttachThreadInput(id_attach: u32, id_attach_to: u32, f_attach: i32) -> i32;
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // 1. If an instance of Nexora Finder is already running, send command line args to it and exit immediately.
+    // This runs in under 1ms before database, Tantivy, or window initialization.
+    if ipc::try_forward_to_existing_instance() {
+        std::process::exit(0);
+    }
+
     let last_shown = Arc::new(parking_lot::Mutex::new(std::time::Instant::now()));
-    let last_shown_single = last_shown.clone();
     let last_shown_evt = last_shown.clone();
     let last_shown_toggle = last_shown.clone();
     let last_shown_tray = last_shown.clone();
     let last_shown_setup = last_shown.clone();
+    let last_shown_ipc = last_shown.clone();
 
     tauri::Builder::default()
-        // 1. Single Instance plugin MUST be registered FIRST so secondary instances forward args & exit before touching Tantivy
-        .plugin(tauri_plugin_single_instance::init(move |app, args, _cwd| {
-            if let Some(window) = app.get_webview_window("main") {
-                *last_shown_single.lock() = std::time::Instant::now();
-                show_and_focus(&window);
-
-                // Find directory path passed from Windows Explorer context menu
-                let target_path = args.iter().skip(1).find(|arg| !arg.starts_with('-')).map(|arg| {
-                    arg.trim().trim_matches('"').trim().to_string()
-                });
-
-                if let Some(folder_path) = target_path {
-                    if !folder_path.is_empty() {
-                        let _ = window.emit("open-folder-filter", folder_path);
-                    } else {
-                        let _ = window.emit("focus-search", ());
-                        let _ = window.emit("window-shown", ());
-                    }
-                } else {
-                    let _ = window.emit("focus-search", ());
-                    let _ = window.emit("window-shown", ());
-                }
-            }
-        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
@@ -72,7 +61,7 @@ pub fn run() {
                 .build(),
         )
         // Auto-hide the spotlight window when the user clicks outside it (window loses focus)
-        // Add a 400ms grace period after showing so window handover doesn't instantly close it
+        // Add a 400ms grace period after showing so window focus handover doesn't prematurely close it
         .on_window_event(move |window, event| {
             if let tauri::WindowEvent::Focused(false) = event {
                 if window.label() == "main" {
@@ -100,7 +89,10 @@ pub fn run() {
             commands::set_indexed_drives,
         ])
         .setup(move |app| {
-            // Initialize Database, Tantivy, Indexer and Watcher here (ONLY executed by primary instance!)
+            // Start the Named Pipe server so secondary instances (e.g. from Explorer right-click) can communicate
+            ipc::start_ipc_server(app.handle().clone(), last_shown_ipc);
+
+            // Initialize Database, Tantivy, Indexer and Watcher for the primary instance
             let db = Database::new().expect("Failed to initialize SQLite database");
             let search = SearchEngine::new().expect("Failed to initialize Tantivy search engine");
             let indexer = Arc::new(Indexer::new(db.clone(), search.clone()));
@@ -208,7 +200,7 @@ pub fn run() {
         .expect("error while running tauri application");
 }
 
-fn position_spotlight(window: &tauri::WebviewWindow) {
+pub fn position_spotlight(window: &tauri::WebviewWindow) {
     if let Ok(Some(monitor)) = window.current_monitor() {
         let scale = window.scale_factor().unwrap_or(1.0);
         let mon_pos = monitor.position();
@@ -228,13 +220,7 @@ fn position_spotlight(window: &tauri::WebviewWindow) {
     }
 }
 
-#[cfg(target_os = "windows")]
-#[link(name = "user32")]
-extern "system" {
-    fn AttachThreadInput(id_attach: u32, id_attach_to: u32, f_attach: i32) -> i32;
-}
-
-fn show_and_focus(window: &tauri::WebviewWindow) {
+pub fn show_and_focus(window: &tauri::WebviewWindow) {
     let _ = window.unminimize();
     let _ = window.show();
     position_spotlight(window);
@@ -273,7 +259,7 @@ fn show_and_focus(window: &tauri::WebviewWindow) {
     }
 }
 
-fn toggle_window(window: &tauri::WebviewWindow, last_shown: &Arc<parking_lot::Mutex<std::time::Instant>>) {
+pub fn toggle_window(window: &tauri::WebviewWindow, last_shown: &Arc<parking_lot::Mutex<std::time::Instant>>) {
     let is_visible = window.is_visible().unwrap_or(false);
     let is_focused = window.is_focused().unwrap_or(false);
 
@@ -287,7 +273,7 @@ fn toggle_window(window: &tauri::WebviewWindow, last_shown: &Arc<parking_lot::Mu
     }
 }
 
-fn register_explorer_context_menu() {
+pub fn register_explorer_context_menu() {
     #[cfg(target_os = "windows")]
     {
         if let Ok(exe_path) = std::env::current_exe() {
