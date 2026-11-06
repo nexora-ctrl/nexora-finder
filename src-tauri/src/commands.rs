@@ -41,6 +41,21 @@ pub async fn search_files(
         }
     }
 
+    // Filter by locked folder scope if specified
+    if let Some(folder_prefix) = &query.folder {
+        let norm_prefix = folder_prefix.replace('/', "\\").to_lowercase();
+        let target_prefix = if norm_prefix.ends_with('\\') {
+            norm_prefix
+        } else {
+            format!("{}\\", norm_prefix)
+        };
+        tantivy_res.items.retain(|item| {
+            let item_path = item.path.replace('/', "\\").to_lowercase();
+            item_path.starts_with(&target_prefix)
+        });
+        tantivy_res.total_matched = tantivy_res.items.len();
+    }
+
     tantivy_res.elapsed_ms = start_time.elapsed().as_secs_f64() * 1000.0;
     Ok(tantivy_res)
 }

@@ -47,6 +47,7 @@ tauri-plugin-updater = "2.14.1"
 tauri-plugin-notification = "2.8.0"
 tauri-plugin-process = "2.4.0"
 windows-registry = "0.6.1"
+tauri-plugin-single-instance = "2"
 
 [profile.release]
 codegen-units = 1

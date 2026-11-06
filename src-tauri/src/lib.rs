@@ -39,6 +39,36 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+                position_spotlight(&window);
+
+                #[cfg(target_os = "windows")]
+                {
+                    use windows::Win32::UI::WindowsAndMessaging::{SetForegroundWindow, BringWindowToTop, ShowWindow, SW_RESTORE};
+                    use windows::Win32::Foundation::HWND;
+                    if let Ok(hwnd) = window.hwnd() {
+                        unsafe {
+                            let _ = ShowWindow(HWND(hwnd.0 as _), SW_RESTORE);
+                            let _ = SetForegroundWindow(HWND(hwnd.0 as _));
+                            let _ = BringWindowToTop(HWND(hwnd.0 as _));
+                        }
+                    }
+                }
+
+                // Check if a path argument was passed
+                let target_path = args.iter().skip(1).find(|arg| !arg.starts_with('-')).cloned();
+                if let Some(folder_path) = target_path {
+                    let _ = window.emit("open-folder-filter", folder_path);
+                } else {
+                    let _ = window.emit("focus-search", ());
+                    let _ = window.emit("window-shown", ());
+                }
+            }
+        }))
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec!["--autostart"]),
@@ -139,6 +169,21 @@ pub fn run() {
 
             // Register Explorer right-click context menu "Open with N-Finder"
             register_explorer_context_menu();
+
+            // Check if app was started directly with a directory path
+            let cli_args: Vec<String> = std::env::args().collect();
+            let initial_folder = cli_args.iter().skip(1).find(|arg| !arg.starts_with('-')).cloned();
+            if let (Some(folder_path), Some(window)) = (initial_folder, app.get_webview_window("main")) {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+                position_spotlight(&window);
+                let w = window.clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                    let _ = w.emit("open-folder-filter", folder_path);
+                });
+            }
 
             // If indexing never completed or index is empty, initiate background indexing
             let completed = db.get_metadata("indexing_completed").unwrap_or(None);

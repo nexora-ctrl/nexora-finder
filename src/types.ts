@@ -13,6 +13,7 @@ export interface SearchQuery {
   query: string;
   category?: string | null;
   drive?: string | null;
+  folder?: string | null;
   min_size?: number | null;
   max_size?: number | null;
   limit?: number | null;

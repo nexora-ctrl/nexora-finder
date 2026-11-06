@@ -17,6 +17,7 @@ pub struct SearchQuery {
     pub query: String,
     pub category: Option<String>,
     pub drive: Option<String>,
+    pub folder: Option<String>,
     pub min_size: Option<u64>,
     pub max_size: Option<u64>,
     pub limit: Option<usize>,

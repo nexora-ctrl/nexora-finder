@@ -27,6 +27,7 @@ export function App() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<CategoryType>("all");
   const [activeDrive, setActiveDrive] = useState("ALL");
+  const [folderScope, setFolderScope] = useState<string | null>(null);
   const [results, setResults] = useState<FileItem[]>([]);
   const [totalMatched, setTotalMatched] = useState<number | null>(null);
   const [elapsedMs, setElapsedMs] = useState<number | null>(null);
@@ -114,7 +115,7 @@ export function App() {
     });
   };
 
-  const isCompact = query.trim().length === 0 && !isSettingsOpen;
+  const isCompact = query.trim().length === 0 && !folderScope && !isSettingsOpen;
 
   const debounceTimer = useRef<number | null>(null);
   const searchRequestId = useRef(0);
@@ -175,6 +176,18 @@ export function App() {
       }
     });
 
+    // Listen to open-folder-filter event from Windows Explorer context menu
+    const unlistenFolderFilterPromise = listen<string>("open-folder-filter", (event) => {
+      if (event.payload) {
+        setFolderScope(event.payload);
+        setQuery("");
+        const input = document.querySelector(".search-input") as HTMLInputElement;
+        if (input) {
+          input.focus();
+        }
+      }
+    });
+
     // Handle in-window global toggle shortcuts
     const handleGlobalWindowKeyDown = (e: KeyboardEvent) => {
       if (
@@ -193,17 +206,18 @@ export function App() {
       unlistenShowPromise.then((unlisten) => unlisten());
       unlistenStatusPromise.then((unlisten) => unlisten());
       unlistenFocusPromise.then((unlisten) => unlisten());
+      unlistenFolderFilterPromise.then((unlisten) => unlisten());
       window.removeEventListener("keydown", handleGlobalWindowKeyDown);
     };
   }, [checkForUpdates]);
 
   // Search function
   const performSearch = useCallback(
-    async (searchTerm: string, cat: CategoryType, drv: string) => {
+    async (searchTerm: string, cat: CategoryType, drv: string, folder: string | null) => {
       const thisId = ++searchRequestId.current;
 
-      if (searchTerm.trim().length === 0) {
-        // When query is empty, show recent files
+      if (searchTerm.trim().length === 0 && !folder) {
+        // When query is empty and no folder lock, show recent files
         try {
           const recent = await invoke<FileItem[]>("get_recent_files", { limit: 25 });
           if (thisId !== searchRequestId.current) return;
@@ -228,6 +242,7 @@ export function App() {
             query: searchTerm,
             category: catParam,
             drive: driveParam,
+            folder: folder || null,
             limit: 150,
           },
         });
@@ -260,7 +275,7 @@ export function App() {
     }
 
     debounceTimer.current = window.setTimeout(() => {
-      performSearch(query, activeCategory, activeDrive);
+      performSearch(query, activeCategory, activeDrive, folderScope);
     }, 5);
 
     return () => {
@@ -268,7 +283,7 @@ export function App() {
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [query, activeCategory, activeDrive, performSearch]);
+  }, [query, activeCategory, activeDrive, folderScope, performSearch]);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -403,6 +418,8 @@ export function App() {
             drives={drives}
             activeDrive={activeDrive}
             onSelectDrive={setActiveDrive}
+            folderScope={folderScope}
+            onClearFolderScope={() => setFolderScope(null)}
           />
         )}
       </header>
