@@ -31,6 +31,7 @@ Pastikan versi lama diganti ke versi baru pada ketiga file utama ini:
 ---
 
 ### 2. Kompilasi & Build Paket Installer Baru
+> ⚠️ Baca `RULES_BUILD.md`. DILARANG `cargo build --release` polos (exe akan kosong abu-abu).
 Jalankan proses pembuatan installer NSIS/MSI melalui terminal:
 ```powershell
 npm.cmd run tauri build -- --bundles nsis
