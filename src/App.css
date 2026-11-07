@@ -3,32 +3,21 @@
    ========================================================================== */
 
 /* ==========================================================================
-   Offline Typography — Sora Font Family
+   Offline Typography — Rubik Font Family
    ========================================================================== */
 @font-face {
-  font-family: 'Sora';
-  src: url('./assets/Sora-Regular.woff2') format('woff2'),
-       url('./assets/Sora-Variable.ttf') format('truetype');
-  font-weight: 300 400;
+  font-family: 'Rubik';
+  src: url('./assets/Rubik-Variable.woff2') format('woff2');
+  font-weight: 300 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Sora';
-  src: url('./assets/Sora-SemiBold.woff2') format('woff2'),
-       url('./assets/Sora-Variable.ttf') format('truetype');
-  font-weight: 500 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Sora';
-  src: url('./assets/Sora-Bold.woff2') format('woff2'),
-       url('./assets/Sora-Variable.ttf') format('truetype');
-  font-weight: 700 800;
-  font-style: normal;
+  font-family: 'Rubik';
+  src: url('./assets/Rubik-Italic.woff2') format('woff2');
+  font-weight: 300 900;
+  font-style: italic;
   font-display: swap;
 }
 
@@ -44,7 +33,7 @@
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
-  --font-sans: 'Sora', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: 'Rubik', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --bg-opacity: 0.88;
 }
 
