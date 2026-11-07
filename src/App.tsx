@@ -89,7 +89,7 @@ export function App() {
         setUpdateNotice({
           type: "success",
           title: "Versi Terbaru Aktif",
-          message: "Nexora Finder sudah menggunakan versi terbaru (v0.3.0-beta). Semua fitur berjalan optimal.",
+          message: "Nexora Finder sudah menggunakan versi terbaru (v0.4.0-beta). Semua fitur berjalan optimal.",
         });
       }
     } catch (err: any) {
@@ -99,7 +99,7 @@ export function App() {
         if (errMsg.includes("404") || errMsg.includes("status code: 404") || errMsg.includes("Could not fetch")) {
           setUpdateNotice({
             type: "info",
-            title: "Nexora Finder v0.3.0-beta",
+            title: "Nexora Finder v0.4.0-beta",
             message: "Aplikasi Anda sudah dalam versi terbaru. Belum ada rilis baru yang dipublikasikan di repositori GitHub.",
           });
         } else {

@@ -450,7 +450,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         <div className="settings-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span className="version-tag">Nexora Finder • Beta v0.3.0</span>
+            <span className="version-tag">Nexora Finder • Beta v0.4.0</span>
             <button
               type="button"
               onClick={onCheckUpdate}
