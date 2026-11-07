@@ -1064,9 +1064,9 @@ html, body, #root {
    Compact Window Mode (Initial Single Search Bar View)
    ========================================================================== */
 .spotlight-window.compact {
-  height: 100vh !important;
-  min-height: unset !important;
-  max-height: unset !important;
+  height: 58px !important;
+  min-height: 58px !important;
+  max-height: 58px !important;
   border-radius: 16px;
   overflow: hidden !important;
   box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.22) !important;

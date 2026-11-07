@@ -196,6 +196,7 @@ pub fn run() {
 
             Ok(())
         })
+        // Embed frontend dist assets cleanly
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

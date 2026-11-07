@@ -7,5 +7,8 @@ fn main() {
         std::env::set_var("WINDRES", format!("{}/windres.exe", llvm_bin));
         std::env::set_var("RC", format!("{}/windres.exe", llvm_bin));
     }
+    println!("cargo:rerun-if-changed=../dist");
+    println!("cargo:rerun-if-changed=../dist/index.html");
+    println!("cargo:rerun-if-changed=tauri.conf.json");
     tauri_build::build()
 }
