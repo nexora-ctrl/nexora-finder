@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive, Sun, Moon, Sparkles, Droplets } from "lucide-react";
+import { X, Power, Minimize2, Keyboard, RefreshCw, Check, SlidersHorizontal, ShieldCheck, HardDrive, Sun, Moon, Sparkles, Droplets, Heart } from "lucide-react";
 import { isEnabled, enable, disable } from "@tauri-apps/plugin-autostart";
 import { invoke } from "@tauri-apps/api/core";
 import { DriveInfo } from "../types";
@@ -74,6 +74,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         setSelectedDrives(availableDrives.map((d) => d.letter));
       });
   }, [isOpen, availableDrives]);
+
+  const handleOpenSupport = async () => {
+    try {
+      await invoke("open_item", { path: "https://saweria.co/ilopejr" });
+    } catch {
+      window.open("https://saweria.co/ilopejr", "_blank");
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -449,30 +457,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         <div className="settings-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span className="version-tag">Nexora Finder • Beta v0.4.0</span>
             <button
               type="button"
+              className="settings-footer-btn settings-update-btn"
               onClick={onCheckUpdate}
               disabled={isCheckingUpdate}
-              style={{
-                background: "rgba(59, 130, 246, 0.12)",
-                border: "1px solid rgba(59, 130, 246, 0.3)",
-                color: "var(--accent-primary, #3b82f6)",
-                padding: "3px 8px",
-                borderRadius: 6,
-                fontSize: 11,
-                fontWeight: 600,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 5,
-                cursor: isCheckingUpdate ? "wait" : "pointer",
-                transition: "all 0.15s ease",
-              }}
               title="Periksa apakah ada versi baru di GitHub"
             >
               <Sparkles size={11} className={isCheckingUpdate ? "animate-spin" : ""} />
               <span>{isCheckingUpdate ? "Memeriksa..." : "Periksa Pembaruan"}</span>
+            </button>
+            <button
+              type="button"
+              className="settings-footer-btn settings-support-btn"
+              onClick={handleOpenSupport}
+              title="Dukung pengembangan Nexora Finder di Saweria"
+            >
+              <Heart size={11} className="support-heart-icon" />
+              <span>Dukungan</span>
             </button>
           </div>
           {savedNotice && (

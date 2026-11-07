@@ -34,6 +34,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
         <div className="settings-header" style={{ marginBottom: 18, paddingBottom: 14 }}>
           <div className="settings-title-group" style={{ gap: 10 }}>
             <div
+              className="update-icon-box"
               style={{
                 width: 32,
                 height: 32,
@@ -51,7 +52,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
               <h2 className="settings-title" style={{ fontSize: 15, margin: 0 }}>
                 Pembaruan Versi Tersedia
               </h2>
-              <span style={{ fontSize: 11, color: "var(--text-muted)" }}>
+              <span className="update-modal-subtitle" style={{ fontSize: 11, color: "var(--text-muted)" }}>
                 Versi baru telah dirilis dan siap dipasang
               </span>
             </div>
@@ -68,43 +69,33 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
 
         <div className="settings-body" style={{ gap: 16 }}>
           <div
+            className="update-release-box"
             style={{
               display: "flex",
               flexDirection: "column",
               gap: 10,
               padding: "14px 16px",
-              background: "rgba(59, 130, 246, 0.06)",
-              border: "1px solid rgba(59, 130, 246, 0.18)",
               borderRadius: 12,
             }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontWeight: 600, fontSize: 14, color: "var(--text-primary)" }}>
+                <span className="update-app-title" style={{ fontWeight: 600, fontSize: 14 }}>
                   Nexora Finder v{version}
                 </span>
-                <span
-                  style={{
-                    fontSize: 10,
-                    padding: "2px 8px",
-                    borderRadius: 999,
-                    background: "rgba(37, 99, 235, 0.2)",
-                    color: "#60a5fa",
-                    fontWeight: 600,
-                  }}
-                >
+                <span className="update-badge-pill">
                   Rilis Baru
                 </span>
               </div>
-              <span style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 4 }}>
+              <span className="update-official-badge" style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
                 <Sparkles size={11} className="text-amber-400" /> Resmi
               </span>
             </div>
             <p
+              className="update-notes-body"
               style={{
                 margin: 0,
                 fontSize: 12,
-                color: "var(--text-secondary)",
                 lineHeight: 1.5,
                 maxHeight: 120,
                 overflowY: "auto",
@@ -117,12 +108,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
             <button
               type="button"
-              className="px-3.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
-              style={{
-                background: "transparent",
-                border: "1px solid var(--border-color)",
-                color: "var(--text-secondary)",
-              }}
+              className="update-dismiss-btn"
               onClick={onClose}
               disabled={isUpdating}
             >
@@ -130,7 +116,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             </button>
             <button
               type="button"
-              className="settings-reindex-btn"
+              className="settings-reindex-btn update-confirm-btn"
               style={{ margin: 0, padding: "8px 18px", fontSize: 12 }}
               onClick={onUpdate}
               disabled={isUpdating}
