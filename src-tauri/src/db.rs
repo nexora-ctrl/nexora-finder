@@ -176,12 +176,14 @@ impl Database {
             params_vec.push(rusqlite::types::Value::Text(fn_pattern));
         }
 
-        // 3. Match Drive filter (either from parsed query "d:" or UI filter)
-        let effective_drive = parsed.drive.as_ref().or(q.drive.as_ref());
-        if let Some(drive) = effective_drive {
-            if !drive.is_empty() && drive != "ALL" {
-                sql.push_str(" AND drive = ?");
-                params_vec.push(rusqlite::types::Value::Text(drive.clone()));
+        // 3. Match Drive filter (either from parsed query "d:" or UI filter), but skip if folder scope is locked
+        if q.folder.is_none() {
+            let effective_drive = parsed.drive.as_ref().or(q.drive.as_ref());
+            if let Some(drive) = effective_drive {
+                if !drive.is_empty() && drive != "ALL" {
+                    sql.push_str(" AND drive = ?");
+                    params_vec.push(rusqlite::types::Value::Text(drive.clone()));
+                }
             }
         }
 

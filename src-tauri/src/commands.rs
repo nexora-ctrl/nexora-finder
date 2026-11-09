@@ -13,6 +13,21 @@ pub struct AppState {
     pub search: SearchEngine,
     pub indexer: Arc<Indexer>,
     pub thumbnails: ThumbnailCache,
+    pub initial_folder: Arc<parking_lot::Mutex<Option<String>>>,
+}
+
+fn is_category_match(category: &str, ext: &str) -> bool {
+    let ext_lower = ext.to_lowercase();
+    match category.to_lowercase().as_str() {
+        "document" => matches!(ext_lower.as_str(), "pdf" | "doc" | "docx" | "txt" | "xlsx" | "xls" | "pptx" | "ppt" | "csv" | "md"),
+        "image" => matches!(ext_lower.as_str(), "png" | "jpg" | "jpeg" | "webp" | "gif" | "bmp" | "svg" | "ico"),
+        "video" => matches!(ext_lower.as_str(), "mp4" | "mkv" | "avi" | "mov" | "wmv" | "webm" | "flv"),
+        "audio" => matches!(ext_lower.as_str(), "mp3" | "wav" | "flac" | "aac" | "ogg" | "m4a"),
+        "app" => matches!(ext_lower.as_str(), "exe" | "msi" | "bat" | "cmd" | "ps1" | "lnk"),
+        "archive" => matches!(ext_lower.as_str(), "zip" | "rar" | "7z" | "tar" | "gz" | "iso"),
+        "code" => matches!(ext_lower.as_str(), "rs" | "ts" | "tsx" | "js" | "jsx" | "py" | "html" | "css" | "json" | "c" | "cpp"),
+        _ => true,
+    }
 }
 
 #[tauri::command]
@@ -22,28 +37,34 @@ pub async fn search_files(
 ) -> Result<SearchResult, String> {
     let start_time = std::time::Instant::now();
 
-    // If folder scope is locked, prioritize SQLite direct search or filesystem reading for 100% accuracy
+    // If folder scope is locked, prioritize direct folder contents or folder-scoped search
     if let Some(folder_path) = &query.folder {
-        let mut db_items = state.db.search(&query).unwrap_or_default();
+        let mut db_items = Vec::new();
+        let path_obj = std::path::Path::new(folder_path);
 
-        // If database search has no items, read directly from disk folder
-        if db_items.is_empty() {
-            let path_obj = std::path::Path::new(folder_path);
+        // When query is empty, show the direct contents of the chosen folder (directories first, then files)
+        if query.query.trim().is_empty() {
             if path_obj.is_dir() {
                 if let Ok(entries) = std::fs::read_dir(path_obj) {
-                    let kw = query.query.trim().to_lowercase();
                     for entry in entries.flatten() {
                         let fname = entry.file_name().to_string_lossy().to_string();
-                        if !kw.is_empty() && !fname.to_lowercase().contains(&kw) {
-                            continue;
-                        }
                         let p = entry.path().to_string_lossy().to_string();
                         let is_dir = entry.file_type().map(|t| t.is_dir()).unwrap_or(false);
                         let ext = if is_dir {
                             "".to_string()
                         } else {
-                            entry.path().extension().map(|e| e.to_string_lossy().to_string()).unwrap_or_default()
+                            entry.path().extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default()
                         };
+
+                        if let Some(cat) = &query.category {
+                            if cat == "folder" && !is_dir {
+                                continue;
+                            }
+                            if cat != "all" && cat != "folder" && !is_category_match(cat, &ext) {
+                                continue;
+                            }
+                        }
+
                         let meta = entry.metadata().ok();
                         let size = meta.as_ref().map(|m| m.len()).unwrap_or(0);
                         let mod_time = meta
@@ -63,6 +84,82 @@ pub async fn search_files(
                             is_directory: is_dir,
                             drive,
                         });
+                    }
+                }
+            }
+
+            // Fallback to database if read_dir returned empty
+            if db_items.is_empty() {
+                db_items = state.db.search(&query).unwrap_or_default();
+            } else {
+                // Sort direct folder items: directories first, then alphabetical by name
+                db_items.sort_by(|a, b| {
+                    b.is_directory.cmp(&a.is_directory).then_with(|| a.filename.to_lowercase().cmp(&b.filename.to_lowercase()))
+                });
+            }
+        } else {
+            // When query is not empty, search inside this folder using SQLite
+            db_items = state.db.search(&query).unwrap_or_default();
+
+            // If database search has no items, walk the directory directly
+            if db_items.is_empty() && path_obj.is_dir() {
+                let kw = query.query.trim().to_lowercase();
+                let limit = query.limit.unwrap_or(150);
+
+                let walker = jwalk::WalkDirGeneric::<((), ())>::new(path_obj)
+                    .skip_hidden(false)
+                    .max_depth(5);
+
+                for entry_res in walker {
+                    if let Ok(entry) = entry_res {
+                        if entry.depth == 0 {
+                            continue;
+                        }
+                        let fname = entry.file_name.to_string_lossy().to_string();
+                        if !fname.to_lowercase().contains(&kw) {
+                            continue;
+                        }
+
+                        let p = entry.path().to_string_lossy().to_string();
+                        let is_dir = entry.file_type.is_dir();
+                        let ext = if is_dir {
+                            "".to_string()
+                        } else {
+                            entry.path().extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default()
+                        };
+
+                        if let Some(cat) = &query.category {
+                            if cat == "folder" && !is_dir {
+                                continue;
+                            }
+                            if cat != "all" && cat != "folder" && !is_category_match(cat, &ext) {
+                                continue;
+                            }
+                        }
+
+                        let meta = entry.metadata().ok();
+                        let size = meta.as_ref().map(|m| m.len()).unwrap_or(0);
+                        let mod_time = meta
+                            .and_then(|m| m.modified().ok())
+                            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                            .map(|d| d.as_secs() as i64)
+                            .unwrap_or(0);
+                        let drive = folder_path.chars().next().unwrap_or('C').to_string();
+
+                        db_items.push(FileItem {
+                            id: None,
+                            path: p,
+                            filename: fname,
+                            extension: ext,
+                            size_bytes: size,
+                            modified_at: mod_time,
+                            is_directory: is_dir,
+                            drive,
+                        });
+
+                        if db_items.len() >= limit {
+                            break;
+                        }
                     }
                 }
             }
@@ -235,4 +332,9 @@ pub async fn set_indexed_drives(drives: Vec<String>, state: State<'_, AppState>)
     let s = drives.join(",");
     state.db.set_metadata("enabled_drives", &s).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn get_initial_folder(state: State<'_, AppState>) -> Option<String> {
+    state.initial_folder.lock().take()
 }

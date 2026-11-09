@@ -87,10 +87,18 @@ pub fn run() {
             commands::set_window_compact,
             commands::get_indexed_drives,
             commands::set_indexed_drives,
+            commands::get_initial_folder,
         ])
         .setup(move |app| {
             // Start the Named Pipe server so secondary instances (e.g. from Explorer right-click) can communicate
             ipc::start_ipc_server(app.handle().clone(), last_shown_ipc);
+
+            // Check if app was started directly with a directory path
+            let cli_args: Vec<String> = std::env::args().collect();
+            let initial_folder_str = cli_args.iter().skip(1).find(|arg| !arg.starts_with('-')).map(|arg| {
+                ipc::clean_folder_path(arg)
+            }).filter(|p| !p.is_empty());
+            let initial_folder_arc = Arc::new(parking_lot::Mutex::new(initial_folder_str.clone()));
 
             // Initialize Database, Tantivy, Indexer and Watcher for the primary instance
             let db = Database::new().expect("Failed to initialize SQLite database");
@@ -105,6 +113,7 @@ pub fn run() {
                 search: search.clone(),
                 indexer: indexer.clone(),
                 thumbnails: thumbnail::ThumbnailCache::new(),
+                initial_folder: initial_folder_arc.clone(),
             };
             app.manage(state);
 
@@ -168,22 +177,15 @@ pub fn run() {
             // Register Explorer right-click context menu "Open with N-Finder"
             register_explorer_context_menu();
 
-            // Check if app was started directly with a directory path
-            let cli_args: Vec<String> = std::env::args().collect();
-            let initial_folder = cli_args.iter().skip(1).find(|arg| !arg.starts_with('-')).map(|arg| {
-                arg.trim().trim_matches('"').trim().to_string()
-            });
-
-            if let (Some(folder_path), Some(window)) = (initial_folder, app.get_webview_window("main")) {
-                if !folder_path.is_empty() {
-                    *last_shown_setup.lock() = std::time::Instant::now();
-                    show_and_focus(&window);
-                    let w = window.clone();
-                    tauri::async_runtime::spawn(async move {
-                        tokio::time::sleep(tokio::time::Duration::from_millis(600)).await;
-                        let _ = w.emit("open-folder-filter", folder_path);
-                    });
-                }
+            // If started directly with a directory path, show spotlight and notify window
+            if let (Some(folder_path), Some(window)) = (initial_folder_str, app.get_webview_window("main")) {
+                *last_shown_setup.lock() = std::time::Instant::now();
+                show_and_focus(&window);
+                let w = window.clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(600)).await;
+                    let _ = w.emit("open-folder-filter", folder_path);
+                });
             }
 
             // If indexing never completed or index is empty, initiate background indexing
@@ -280,19 +282,18 @@ pub fn register_explorer_context_menu() {
         if let Ok(exe_path) = std::env::current_exe() {
             let exe_str = exe_path.to_string_lossy().to_string();
             let icon_str = format!("{},0", exe_str);
-            let command_str = format!("\"{}\" \"%1\"", exe_str);
-            let bg_command_str = format!("\"{}\" \"%V\"", exe_str);
+            // Use %V for directories, background, and drives to avoid quotation escape bugs in Windows Explorer
+            let command_str = format!("\"{}\" \"%V\"", exe_str);
 
             let targets = [
                 ("Software\\Classes\\Directory\\shell\\NexoraFinder", &command_str),
-                ("Software\\Classes\\Directory\\Background\\shell\\NexoraFinder", &bg_command_str),
+                ("Software\\Classes\\Directory\\Background\\shell\\NexoraFinder", &command_str),
                 ("Software\\Classes\\Drive\\shell\\NexoraFinder", &command_str),
-                ("Software\\Classes\\Folder\\shell\\NexoraFinder", &command_str),
             ];
 
             for (sub_key, cmd) in targets {
                 if let Ok(key) = windows_registry::CURRENT_USER.create(sub_key) {
-                    let _ = key.set_string("", "Open with N-Finder");
+                    let _ = key.set_string("", "Open with Nexora Finder");
                     let _ = key.set_string("Icon", &icon_str);
                 }
                 let cmd_key_path = format!("{}\\command", sub_key);
@@ -300,6 +301,9 @@ pub fn register_explorer_context_menu() {
                     let _ = cmd_key.set_string("", cmd);
                 }
             }
+
+            // Remove legacy Folder\shell\NexoraFinder if present to prevent duplicate menu items
+            let _ = windows_registry::CURRENT_USER.remove_tree("Software\\Classes\\Folder\\shell\\NexoraFinder");
         }
     }
 }

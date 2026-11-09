@@ -184,10 +184,24 @@ export function App() {
       }
     });
 
+    // Check if launched with a folder scope on startup
+    invoke<string | null>("get_initial_folder")
+      .then((folder) => {
+        if (folder) {
+          setFolderScope(folder);
+          setActiveDrive("ALL");
+          setActiveCategory("all");
+          setQuery("");
+        }
+      })
+      .catch((err) => console.error("Failed to query initial folder:", err));
+
     // Listen to open-folder-filter event from Windows Explorer context menu
     const unlistenFolderFilterPromise = listen<string>("open-folder-filter", (event) => {
       if (event.payload) {
         setFolderScope(event.payload);
+        setActiveDrive("ALL");
+        setActiveCategory("all");
         setQuery("");
         const input = document.querySelector(".search-input") as HTMLInputElement;
         if (input) {
@@ -430,7 +444,10 @@ export function App() {
             activeDrive={activeDrive}
             onSelectDrive={setActiveDrive}
             folderScope={folderScope}
-            onClearFolderScope={() => setFolderScope(null)}
+            onClearFolderScope={() => {
+              setFolderScope(null);
+              setQuery("");
+            }}
           />
         )}
       </header>
@@ -504,6 +521,12 @@ export function App() {
           onOpenWith={handleOpenItemWith}
           onReveal={handleRevealItem}
           onCopyPath={handleCopyPath}
+          onScopeFolder={(folderItem) => {
+            setFolderScope(folderItem.path);
+            setActiveDrive("ALL");
+            setActiveCategory("all");
+            setQuery("");
+          }}
         />
       )}
 

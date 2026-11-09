@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { FileItem } from "../types";
-import { FolderOpen, ExternalLink, Copy, Play } from "lucide-react";
+import { FolderOpen, ExternalLink, Copy, Play, FolderSearch } from "lucide-react";
 
 interface ContextMenuProps {
   x: number;
@@ -11,6 +11,7 @@ interface ContextMenuProps {
   onOpenWith: (item: FileItem) => void;
   onReveal: (item: FileItem) => void;
   onCopyPath: (item: FileItem) => void;
+  onScopeFolder?: (item: FileItem) => void;
 }
 
 export const ContextMenu: React.FC<ContextMenuProps> = ({
@@ -22,6 +23,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   onOpenWith,
   onReveal,
   onCopyPath,
+  onScopeFolder,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +71,19 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
         <Play size={14} className="menu-icon text-cyan-400" />
         <span>Buka</span>
       </div>
+
+      {item.is_directory && onScopeFolder && (
+        <div
+          className="context-menu-item"
+          onClick={() => {
+            onClose();
+            onScopeFolder(item);
+          }}
+        >
+          <FolderSearch size={14} className="menu-icon text-blue-400" />
+          <span>Cari di dalam folder ini</span>
+        </div>
+      )}
 
       {!item.is_directory && (
         <div
